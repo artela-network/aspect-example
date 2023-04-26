@@ -1,10 +1,10 @@
 #!/bin/bash
 
-web3jsDir=/Users/jack/Projects/js/web3.js/packages
+web3jsDir=/Users/jack/Projects/js/web3.js
 currentDir=$(pwd)
 
 packages=()
-for d in "$web3jsDir/*"
+for d in "$web3jsDir/packages/*"
 do
   packages+=($(basename $d))
 done
