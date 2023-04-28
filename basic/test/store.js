@@ -51,7 +51,7 @@ async function f() {
         console.log("aspect address: " + aspect.options.address);
         console.log(receipt);
     }).on('transactionHash', (txHash) => {
-        console.log("deploy contract tx hash: ", txHash);
+        console.log("deploy aspect tx hash: ", txHash);
     });
 
     // bind the smart contract with aspect
