@@ -3,8 +3,11 @@ import {Aspect, Context} from "./lib";
 
 class MyFirstAspect implements Aspect {
     onTxReceive(s: string): string {
-        let lastBlock = Context.lastBlock().replaceAll("\"", "\\\"");
-        return "{\"success\":true,\"context\":{\"testKey\":\"testValue\",\"blockLen\":\""+lastBlock+"\"}}";
+      //  let lastBlock = Context.lastBlock().replaceAll("\"", "\\\"");
+
+        return "{\"success\":true,\"context\":{\"testKey\":\"testValue\"}}";
+
+      //  return "{\"success\":true,\"context\":{\"testKey\":\"testValue\",\"blockLen\":\""+lastBlock+"\"}}";
     }
 
     onBlockInitialize(arg: string): string {

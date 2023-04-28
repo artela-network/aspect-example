@@ -85,6 +85,8 @@ class Entry {
             out = aspect.preContractCall(arg);
         } else if (method == "postTxExecute") {
             out = aspect.postTxExecute(arg);
+        } else if (method == "postContractCall") {
+            out = aspect.postContractCall(arg);
         } else if (method == "onTxCommit") {
             out = aspect.onTxCommit(arg);
         } else if (method == "onBlockFinalize") {
