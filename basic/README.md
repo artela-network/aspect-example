@@ -13,7 +13,7 @@ Note: this is a very early version, you may need to setup some of the dependenci
 
 1. Run `git clone https://github.com/artela-network/web3.js.git` to clone the web3.js code to your local folder
 2. By default, the branch should be `1.x` , if not, switch to it
-3. Run `npm ci` to install dependencies. Note: **DO NOT RUN** `npm install`, this will break the build because of a compatibility issue of babel.
+3. Run `npm install` to install dependencies
 4. Run `npm run build` to build the web3.js files
 5. Run `sh link.sh` to link the packages to your local npm cache
 
