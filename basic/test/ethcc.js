@@ -23,12 +23,13 @@ async function f() {
     const web3 = new Web3('http://127.0.0.1:8545');
     let accounts = await web3.eth.getAccounts();
 
+    console.log(JSON.stringify(web3.utils.aspectCoreAddr))
+
     let honeyPotNonceVal = await web3.eth.getTransactionCount(accounts[0]);
     let attackNonceVal = await web3.eth.getTransactionCount(accounts[1]);
 
     // Step2: deploy honeypot contract to artela
-    let honeyPotContract = new web3.atl.Contract(honeyPotContractABI.abi,
-        web3.utils.aspectCoreAddr, honeyPotContractOptions);
+    let honeyPotContract = new web3.atl.Contract(honeyPotContractABI.abi,honeyPotContractOptions);
     let honeyPotInstance = honeyPotContract.deploy().send({from: accounts[0], nonce: honeyPotNonceVal});
     honeyPotContract = await honeyPotInstance.on('receipt', function (receipt) {
         console.log("=============== Deploy contract :: HoneyPot.sol ===============");
@@ -39,8 +40,7 @@ async function f() {
     });
 
     // Step3: deploy attack contract to artela
-    let attackContract = new web3.atl.Contract(attackContractABI.abi,
-        web3.utils.aspectCoreAddr, attackContractOptions);
+    let attackContract = new web3.atl.Contract(attackContractABI.abi,attackContractOptions);
     let attackInstance = attackContract.deploy().send({from: accounts[1], nonce: attackNonceVal});
     attackContract = await attackInstance.on('receipt', function (receipt) {
         console.log("=============== Deploy contract :: Attack.sol ===============");
