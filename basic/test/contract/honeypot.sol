@@ -2,24 +2,19 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 contract HoneyPot {
-    uint256 public withdrawalLimit = 1 ether;
-    mapping(address => uint256) public lastWithdrawTime;
-    mapping(address => uint256) public balances;
-    
-    function depositFunds() public payable {
+    mapping(address => uint) public balances;
+
+    function deposit() public payable {
         balances[msg.sender] += msg.value;
     }
-    
-    function withdrawFunds (uint256 _weiToWithdraw) public {
-        require(balances[msg.sender] >= _weiToWithdraw);
-        // limit the withdrawal
-        require(_weiToWithdraw <= withdrawalLimit);
-        // limit the time allowed to withdraw
-        require(block.timestamp >= lastWithdrawTime[msg.sender] + 1 weeks);
-        msg.sender.call{value:_weiToWithdraw}("");
 
-        balances[msg.sender] -= _weiToWithdraw;
-        lastWithdrawTime[msg.sender] = block.timestamp;
+    function withdraw() public {
+        uint bal = balances[msg.sender];
+        require(bal > 0);
+
+        (bool sent, ) = msg.sender.call{value: bal}("");
+        require(sent, "Failed to send Ether");
+
+        balances[msg.sender] = 0;
     }
 }
-
