@@ -43,7 +43,7 @@ async function f() {
         web3.utils.aspectCoreAddr, demoContractOptions);
     instance = aspect.deploy({
         data: '0x' + aspectCode,
-        properties: [{'key': '0x00', 'value': '0x02'}]
+        properties: [{'key': '0x00', 'value': '0x02'},{'key': '0x032322', 'value': '0x2221'}]
     }).send({from: accounts[0], nonce: nonceVal + 1});
 
     aspect = await instance.on('receipt', (receipt) => {

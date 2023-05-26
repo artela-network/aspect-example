@@ -11,6 +11,16 @@ contract Storage {
 
     uint256 number;
 
+
+    function isOwner(address sender)  public view returns  (bool){
+
+        if((sender=="0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2")||(sender=="0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db")){
+        return true;
+        }
+        return false;
+
+    }
+
     /**
      * @dev Store value in variable
      * @param num value to store

@@ -2,6 +2,15 @@
 import {Aspect, Context} from "./lib";
 
 class MyFirstAspect implements Aspect {
+
+    isOwner(sender: string): bool {
+        return true
+    }
+
+    onContractBinding(contractAddr: string): bool {
+        return true
+    }
+
     onTxReceive(s: string): string {
       //  let lastBlock = Context.lastBlock().replaceAll("\"", "\\\"");
 
