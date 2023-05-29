@@ -39,7 +39,7 @@ async function f() {
     });
 
     // load aspect code and deploy
-    let aspectCode = fs.readFileSync('../aspect/build/release.wasm', {
+    let aspectCode = fs.readFileSync('../aspect/build/release.wasm.bak', {
         encoding: "hex"
     });
     instance = aspect.deploy({

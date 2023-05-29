@@ -68,6 +68,8 @@ async function f() {
             console.log("contract binding tx hash: ", txHash);
         });
 
+    await new Promise(r => setTimeout(r, 5000));
+
     // call the smart contract, aspect should be triggered
     await contract.methods.store(100)
         .send({from: accounts[0], nonce: nonceVal + 3})
