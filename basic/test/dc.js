@@ -16,6 +16,8 @@ async function f() {
 
     // retrieve accounts
     let accounts = await web3.eth.getAccounts();
+    console.log("account1: ", accounts[0]);
+    console.log("account2: ", accounts[1]);
 
     // retrieve current nonce
     let nonceVal = await web3.eth.getTransactionCount(accounts[0]);
