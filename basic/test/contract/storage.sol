@@ -9,6 +9,7 @@ pragma solidity >=0.7.0 <0.9.0;
  */
 contract Storage {
 
+    //@trace("number")
     uint256 number;
 
 
@@ -37,3 +38,4 @@ contract Storage {
         return number;
     }
 }
+

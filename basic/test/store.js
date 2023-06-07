@@ -20,6 +20,7 @@ async function f() {
     // retrieve current nonce
     let nonceVal = await web3.eth.getTransactionCount(accounts[0]);
 
+
     // instantiate an instance of demo contract
     let contract = new web3.atl.Contract(demoContractABI.abi,
         web3.utils.aspectCoreAddr, demoContractOptions);
