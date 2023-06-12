@@ -12,10 +12,10 @@ import { MyContract } from "./my_contract";
 
 class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     isOwner(sender: string): bool {
-        let value = Context.getProperty("owner");
-        if (value.includes(sender)) {
-            return true;
-        }
+        // let value = Context.getProperty("owner");
+        // if (value.includes(sender)) {
+        //     return true;
+        // }
         return false;
     }
 
@@ -58,7 +58,7 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
         // schedule a tx
         this.scheduleTx();
         ret.success=true;
-        ret.message=k1+k2+lastBlockNum
+        ret.message=k1;
         return ret;
     }
 
@@ -106,7 +106,7 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
         let scheduleTo = Context.getProperty("ScheduleTo");
         let broker = Context.getProperty("Broker");
 
-        let tx = new MyContract(scheduleTo).store100(new Msg(0, "200000000", "30000", broker))
+        let tx = new MyContract(scheduleTo).store100(new Msg(0, "200000000", "30000", broker));
         var periodicSch: Schedule = PeriodicSchedule.builder("myPeriodicSchedule").startAfter(3).count(1000).everyNBlocks(5).maxRetry(2);
         return periodicSch.submit(tx);
     }

@@ -3,18 +3,15 @@
 //todo modify it
 const Web3 = require('web3');
 const fs = require("fs");
-let contractBin = fs.readFileSync('./storage/Storage.bin', {
-    encoding: "hex"
-});
+const contractBin = fs.readFileSync('./storage/Storage.bin', "utf-8");
 const storage = fs.readFileSync('./storage/Storage.abi',"utf-8");
 const contractABI = JSON.parse(storage);
 
 const demoContractOptions = {
-    data:'0x' + contractBin,
+    data: contractBin,
     gasPrice: 1000000010, // Default gasPrice set by Geth
     gas: 4000000
 };
-
 async function f() {
     // init connection to Artela node
     const web3 = new Web3('http://127.0.0.1:8545');

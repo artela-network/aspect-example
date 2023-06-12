@@ -9,38 +9,44 @@ import {AspectOutput} from "./types/aspect/v1/AspectOutput";
 export class Entry {
     private readonly blockAspect: IAspectBlock;
     private readonly transactionAspect: IAspectTransaction;
-    constructor(blockAspect: IAspectBlock,transactionAspect: IAspectTransaction) {
+
+    constructor(blockAspect: IAspectBlock, transactionAspect: IAspectTransaction) {
         this.blockAspect = blockAspect;
-        this.transactionAspect=transactionAspect;
+        this.transactionAspect = transactionAspect;
     }
+
     private checkAspect(): i32 {
-        if(this.blockAspect==null && this.transactionAspect==null){
+        if ((this.blockAspect == null) && (this.transactionAspect == null)) {
             return 0;
         }
-        if(this.blockAspect!=null && this.transactionAspect!=null){
+        if ((this.blockAspect != null) && (this.transactionAspect != null)) {
             return 3;
         }
-        if(this.transactionAspect!=null){
+        if (this.transactionAspect != null) {
             return 2;
         }
-        if(this.blockAspect!=null){
+        if (this.blockAspect != null) {
             return 1;
         }
         return 0;
     }
+
     public isBlockLevel(): bool {
         let objectType = this.checkAspect();
         return objectType === 1 || objectType === 3;
     }
+
     public isTransactionLevel(): bool {
         let objectType = this.checkAspect();
-        return  objectType === 2 || objectType === 3;
+        return objectType === 2 || objectType === 3;
     }
+
     loadAspectInput(argPtr: i32): AspectInput {
         let encodedArg = new AUint8Array();
         encodedArg.load(argPtr);
         return Protobuf.decode<AspectInput>(encodedArg.get(), AspectInput.decode);
     }
+
     loadInputString(argPtr: i32): AString {
         let arg = new AString();
         arg.load(argPtr);
@@ -59,6 +65,7 @@ export class Entry {
         ret.set(encodedOutput);
         return ret.store();
     }
+
     public execute(methodPtr: i32, argPtr: i32): i32 {
         let methodArg = new AString();
         methodArg.load(methodPtr);
@@ -66,17 +73,16 @@ export class Entry {
         if (this.checkAspect() <= 0) {
             throw new Error("invalid aspect code");
         }
-        if (method == "onContractBinding" && this.isTransactionLevel()) {
-
+        if (method === "onContractBinding" && this.isTransactionLevel()) {
             let arg = this.loadInputString(argPtr);
             let out = this.transactionAspect.onContractBinding(arg.get());
             return this.storeOutputBool(out);
-        } else if (method == "isOwner") {
+        } else if (method === "isOwner") {
             let arg = this.loadInputString(argPtr);
-            if(this.isTransactionLevel()) {
+            if (this.isTransactionLevel()) {
                 let out = this.transactionAspect.isOwner(arg.get());
                 return this.storeOutputBool(out);
-            }else if(this.isBlockLevel()){
+            } else if (this.isBlockLevel()) {
                 let out = this.blockAspect.isOwner(arg.get());
                 return this.storeOutputBool(out);
             }
@@ -84,11 +90,11 @@ export class Entry {
             let arg = this.loadAspectInput(argPtr);
             let out = this.transactionAspect.onTxReceive(arg);
             return this.storeAspectOutput(out);
-        } else if (method == "onBlockInitialize" && this.isBlockLevel() ) {
+        } else if (method == "onBlockInitialize" && this.isBlockLevel()) {
             let arg = this.loadAspectInput(argPtr);
             let out = this.blockAspect.onBlockInitialize(arg);
             return this.storeAspectOutput(out);
-        } else if (method == "onTxVerify"&& this.isTransactionLevel()) {
+        } else if (method == "onTxVerify" && this.isTransactionLevel()) {
             let arg = this.loadAspectInput(argPtr);
             let out = this.transactionAspect.onTxVerify(arg);
             return this.storeAspectOutput(out);
@@ -129,17 +135,4 @@ export class Entry {
         }
         return 0;
     }
-}
-
-export function allocate(size: i32): i32 {
-    return heap.alloc(size) as i32;
-}
-
-export function stringToUint8Arrary(s: string): Uint8Array {
-    const buffer = String.UTF8.encode(s);
-    if (buffer.byteLength === 0) {
-        return new Uint8Array(0);
-    }
-
-    return Uint8Array.wrap(buffer, 0, s.length);
 }

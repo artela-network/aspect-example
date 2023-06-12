@@ -16,11 +16,11 @@ declare namespace __HostApi__ {
 
     function scheduleTx(ptr: i32): i32
 
-    function setContext(keyPtr: i32, valuePtr: i32): void
+    function setContext(keyPtr: i32, valuePtr: i32): bool
 
     function getContext(ptr: i32): i32
 
-    function setAspectState(keyPtr: i32, valuePtr: i32): void
+    function setAspectState(keyPtr: i32, valuePtr: i32): bool
 
     function getAspectState(ptr: i32): i32
 }
@@ -60,16 +60,14 @@ export class Context {
         return output.get();
     }
 
-    static setContext(key: string, value: string): void {
+    static setContext(key: string, value: string): bool {
         let inputKey = new AString();
         inputKey.set(key);
         let inPtr = inputKey.store();
         let inputValue = new AString();
         inputValue.set(value);
         let ptrValue = inputValue.store();
-        return __HostApi__.setContext(inPtr, ptrValue);
-
-
+        return   __HostApi__.setContext(inPtr, ptrValue);
     }
 
     static getContext(key: string): string {
@@ -82,7 +80,7 @@ export class Context {
         return output.get();
     }
 
-    static setAspectState(key: string, value: string): void {
+    static setAspectState(key: string, value: string): bool {
         let inputKey = new AString();
         inputKey.set(key);
         let inPtr = inputKey.store();
@@ -115,17 +113,4 @@ export class Context {
         output.load(ret);
         return output.get();
     }
-}
-
-// Util part of hostapis
-export class Util {
-}
-
-// Crypto part of hostapis
-export class Crypto {
-}
-
-// Tx part of hostapis
-export class Tx {
-
 }

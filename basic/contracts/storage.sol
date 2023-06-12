@@ -10,7 +10,6 @@ pragma solidity >=0.7.0 <0.9.0;
 contract Storage {
 
     address private deployer;
-    uint256 number;
 
     constructor() {
         deployer = msg.sender;
@@ -23,6 +22,9 @@ contract Storage {
             return false;
         }
     }
+
+
+    uint256 number;
 
     /**
      * @dev Store value in variable

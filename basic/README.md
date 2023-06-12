@@ -27,3 +27,14 @@ Note: this is a very early version, you may need to setup some of the dependenci
    1. deploy an aspect
    2. bind the aspect to a smart contract
    3. call smart contract and trigger the aspect
+
+## build 
+1. confirm '$GOPATH/src/github.com/artela-network/artelasdk/'
+2. install solc
+   ```shell
+    brew tap ethereum/ethereum
+    brew install  solidity
+   ```
+2. `sh script/build.sh`
+3. `cd build`
+4. `sh run-test.sh`
