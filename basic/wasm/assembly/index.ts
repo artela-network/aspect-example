@@ -15,6 +15,9 @@ export function execute(methodPtr: i32, argPtr: i32): i32 {
 export function isBlockLevel(): bool {
   return  entry.isBlockLevel();
 }
+export function isTransactionLevel(): bool {
+  return  entry.isTransactionLevel();
+}
 export function allocate(size: i32): i32 {
   return alloc(size) as i32;
 }
