@@ -31,14 +31,16 @@ export class Entry {
         return 0;
     }
 
-    public isBlockLevel(): bool {
+    public isBlockLevel(): i32 {
         let objectType = this.checkAspect();
-        return objectType === 1 || objectType === 3;
+        let check =(objectType === 1 || objectType === 3);
+        return this.storeOutputBool(check)
     }
 
-    public isTransactionLevel(): bool {
+    public isTransactionLevel(): i32 {
         let objectType = this.checkAspect();
-        return objectType === 2 || objectType === 3;
+        let check =( objectType === 2 || objectType === 3);
+        return this.storeOutputBool(check)
     }
 
     loadAspectInput(argPtr: i32): AspectInput {

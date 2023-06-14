@@ -12,10 +12,10 @@ import { MyContract } from "./my_contract";
 
 class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     isOwner(sender: string): bool {
-        // let value = Context.getProperty("owner");
-        // if (value.includes(sender)) {
-        //     return true;
-        // }
+        let value = Context.getProperty("owner");
+        if (value.includes(sender)) {
+            return true;
+        }
         return false;
     }
 
@@ -63,63 +63,53 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     }
 
     onBlockInitialize(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     onTxVerify(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+         var aspectOutput = new AspectOutput();
+         aspectOutput.success=false;
+         aspectOutput.message="test onTxVerify error";
+         return aspectOutput;
     }
 
     onAccountVerify(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+
+        var aspectOutput = new AspectOutput();
+
+
+        aspectOutput.success=false;
+        aspectOutput.message="test onAccountVerify error";
+
+        return aspectOutput;
     }
 
     onGasPayment(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     preTxExecute(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     preContractCall(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     postContractCall(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     postTxExecute(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     onTxCommit(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     onBlockFinalize(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
-        return ret;
+        return new AspectOutput();
     }
 
     private scheduleTx(): bool {
