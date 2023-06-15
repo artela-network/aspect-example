@@ -8,32 +8,53 @@ pragma solidity >=0.7.0 <0.9.0;
  * @custom:dev-run-script ./scripts/deploy_with_ethers.ts
  */
 contract Storage {
+    address private deployer;
 
-    uint256 number;
-
-
-    function isOwner(address sender)  public view returns  (bool){
-
-        if((sender=="0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2")||(sender=="0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db")){
-        return true;
-        }
-        return false;
-
+    constructor() {
+        deployer = msg.sender;
     }
+
+    function isOwner(address user) external view returns (bool result) {
+        if (user == deployer) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    uint256 number1;
+
+    // int32 number2;
+    // uint64 number3;
+    // string str1;
+
+    // bool bool1;
+
+    struct Person {
+        uint64 id;
+        uint32 balance;
+    }
+
+    mapping(string => Person) public accounts;
 
     /**
      * @dev Store value in variable
      * @param num value to store
      */
     function store(uint256 num) public {
-        number = num;
+        number1 = number1 + num;
+        // number2 = 2000;
+        // number3 = 3000;
+        // str1 = "hello";
+        // bool1 = true;
+        accounts["tom"] = Person(101, 9900);
     }
 
     /**
      * @dev Return value
      * @return value of 'number'
      */
-    function retrieve() public view returns (uint256){
-        return number;
+    function retrieve() public view returns (uint256) {
+        return number1;
     }
 }

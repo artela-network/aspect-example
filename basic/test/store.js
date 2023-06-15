@@ -24,7 +24,7 @@ async function f() {
     let contract = new web3.atl.Contract(demoContractABI.abi,
         web3.utils.aspectCoreAddr, demoContractOptions);
     // deploy demo contract
-    let instance = contract.deploy().send({from: accounts[0], nonce: nonceVal});
+    let instance = contract.deploy().send({ from: accounts[0], nonce: nonceVal });
     contract = await instance.on('receipt', function (receipt) {
         console.log("=============== deployed contract ===============");
         console.log("contract address: " + receipt.contractAddress);
@@ -35,7 +35,7 @@ async function f() {
 
 
     // load aspect code and deploy
-    let aspectCode = fs.readFileSync('../aspect/build/release.wasm', {
+    let aspectCode = fs.readFileSync('/Users/likun/go/src/github.com/artela-network/artelasdk/djpm/run/libs/build/release.wasm', {
         encoding: "hex"
     });
     // instantiate an instance of aspect
@@ -43,8 +43,8 @@ async function f() {
         web3.utils.aspectCoreAddr, demoContractOptions);
     instance = aspect.deploy({
         data: '0x' + aspectCode,
-        properties: [{'key': '0x00', 'value': '0x02'},{'key': '0x032322', 'value': '0x2221'}]
-    }).send({from: accounts[0], nonce: nonceVal + 1});
+        properties: [{ 'key': '0x00', 'value': '0x02' }, { 'key': '0x032322', 'value': '0x2221' }]
+    }).send({ from: accounts[0], nonce: nonceVal + 1 });
 
     aspect = await instance.on('receipt', (receipt) => {
         console.log("=============== deployed aspect ===============");
@@ -59,7 +59,7 @@ async function f() {
         priority: 1,
         aspectId: aspect.options.address,
         aspectVersion: 1,
-    }).send({from: accounts[0], nonce: nonceVal + 2})
+    }).send({ from: accounts[0], nonce: nonceVal + 2 })
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
@@ -70,9 +70,10 @@ async function f() {
 
     await new Promise(r => setTimeout(r, 5000));
 
+    console.log("calling contract...");
     // call the smart contract, aspect should be triggered
     await contract.methods.store(100)
-        .send({from: accounts[0], nonce: nonceVal + 3})
+        .send({ from: accounts[0], nonce: nonceVal + 3 })
         .on('receipt', (receipt) => {
             console.log("=============== called store ===============")
             console.log(receipt);
@@ -81,8 +82,8 @@ async function f() {
             console.log("call contract tx hash: ", txHash);
         });
 
-    let result= await contract.methods.retrieve().call({from: accounts[0], nonce: nonceVal + 4})
-    console.log("==== reuslt==="+ result);
+    let result = await contract.methods.retrieve().call({ from: accounts[0], nonce: nonceVal + 4 })
+    console.log("==== reuslt===" + result);
 
 
 }
