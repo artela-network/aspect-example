@@ -1,14 +1,9 @@
 // The entry file of your WebAssembly module.
 import { IAspectTransaction,IAspectBlock } from "../lib/interfaces";
-import {Context} from "../lib/hostapi";
-
-import { Schedule, PeriodicSchedule, } from "../lib/types/schedule";
-import { Msg } from "../lib/types/msg";
-
-import { AspectInput } from "../lib/types/aspect/v1/AspectInput"
-import { AspectOutput } from "../lib/types/aspect/v1/AspectOutput"
-
-import { MyContract } from "./my_contract";
+import { Context } from "../lib/host";
+import { Storage } from "./contract_storage"
+import { Schedule, PeriodicSchedule,ScheduleTx ,Opts} from "../lib/types";
+import { AspectInput ,AspectOutput} from "../lib/types"
 
 class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     isOwner(sender: string): bool {
@@ -63,8 +58,7 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     }
 
     onBlockInitialize(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
-        ret.success = true;
+        let ret = new AspectOutput(true);
         return ret;
     }
 
@@ -106,7 +100,22 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
 
     postTxExecute(input: AspectInput): AspectOutput {
         let ret = new AspectOutput();
+        if (input.tx != null) {
+            let num1 = new Storage.number(input.tx!.to);
+            let num1_latest = num1.latest();
+            Context.setContext("number1_latest", num1_latest!.change.toString())
+
+            let account = new Storage.accounts(input.tx!.to);
+            let tom_balance_latest = account.person("tom").balance().latest();
+            if (tom_balance_latest == null) {
+                Context.setContext("account_person_tome_account_latest", "is null");
+            } else {
+                Context.setContext("account_person_tome_account_latest_acct", tom_balance_latest.account);
+                Context.setContext("account_person_tome_balance_latest_change", tom_balance_latest.change.toString());
+            }
+        }
         ret.success = true;
+       ret.message=Context.getContext("account_person_tome_balance_latest_change")
         return ret;
     }
 
@@ -117,7 +126,7 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     }
 
     onBlockFinalize(input: AspectInput): AspectOutput {
-        let ret = new AspectOutput();
+        let ret = new AspectOutput(true);
         ret.success = true;
         return ret;
     }
@@ -126,10 +135,20 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
         let scheduleTo = Context.getProperty("ScheduleTo");
         let broker = Context.getProperty("Broker");
 
-        let tx = new MyContract(scheduleTo).store100(new Msg(0, "200000000", "30000", broker));
-        var periodicSch: Schedule = PeriodicSchedule.builder("myPeriodicSchedule").startAfter(3).count(1000).everyNBlocks(5).maxRetry(2);
+        // let tx = new MyContract(scheduleTo).store100(new Option(0, "200000000", "30000", broker))
+        let tx = new ScheduleTx(scheduleTo).New(
+            "0x6057361d00000000000000000000000000000000000000000000000000000000000003e8",
+            new Opts(0, "200000000", "30000", broker))
+
+        var periodicSch: Schedule = PeriodicSchedule
+            .builder("myPeriodicSchedule")
+            .startAfter(3)
+            .count(1000)
+            .everyNBlocks(5)
+            .maxRetry(2);
         return periodicSch.submit(tx);
     }
+
 }
 
 export default MyFirstAspect;

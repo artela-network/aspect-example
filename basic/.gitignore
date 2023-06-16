@@ -132,4 +132,5 @@ dist
 .idea
 
 build/*/*
+wasm/build
 package-lock.json

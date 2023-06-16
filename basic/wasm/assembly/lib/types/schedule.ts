@@ -1,8 +1,6 @@
-import { AspTransaction } from "./aspect/v1/AspTransaction";
-import { Context } from "../hostapi";
-import { Schedule as ScheduleMsg } from "./scheduler/v1/Schedule";
-import { ScheduleId as ScheduleMsgId } from "./scheduler/v1/ScheduleId";
-import { ScheduleStatus } from "./scheduler/v1/ScheduleStatus";
+import { Context } from "../host";
+import { ScheduleMsg, ScheduleMsgId, ScheduleStatus,AspTransaction } from "./index";
+import { Utils } from "../utils";
 
 export interface Schedule {
     submit(tran: AspTransaction): bool
@@ -111,4 +109,55 @@ export class AdHocSchedule implements Schedule {
         this._nextNBlocks = nextNBlocks;
         this._maxRetry = maxRetry;
     }
+}
+export class Opts {
+    value: u64;
+    maxFeePerGas: string;
+    maxPriorityFeePerGas: string;
+    broker: string;
+
+    constructor(
+        value: u64 = 0,
+        maxFeePerGas: string = "",
+        maxPriorityFeePerGas: string = "",
+        broker: string = "",
+    ) {
+        this.value = value;
+        this.maxFeePerGas = maxFeePerGas;
+        this.maxPriorityFeePerGas = maxPriorityFeePerGas;
+        this.broker = broker;
+    }
+}
+export class ScheduleTx {
+    public New(input: string, msg: Opts): AspTransaction {
+        let inputBytes = Utils.stringToUint8Array(input);
+
+        let tx = new AspTransaction();
+        tx.chainId = "";
+        tx.nonce = 0;
+        tx.gasTipCap = msg.maxPriorityFeePerGas;
+        tx.gasFeeCap = msg.maxFeePerGas;
+        tx.gasLimit = 0;
+        tx.gasPrice = 0;
+        tx.to = this._address;
+        tx.value = msg.value;
+        tx.input = inputBytes;
+        tx.accessList = [];
+        tx.blockHash = new Uint8Array(0);
+        tx.blockNumber = 0;
+        tx.from = msg.broker;
+        tx.hash = new Uint8Array(0);
+        tx.transactionIndex = 0;
+        tx.type = 0;
+        tx.v = new Uint8Array(0);
+        tx.r = new Uint8Array(0);
+        tx.s = new Uint8Array(0);
+        return tx;
+    }
+
+    constructor(address: string) {
+        this._address = address;
+    }
+
+    _address: string;
 }

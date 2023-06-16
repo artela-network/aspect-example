@@ -3,8 +3,17 @@
 //todo modify it
 const Web3 = require('web3');
 const fs = require("fs");
+const scheduleTargetBin = fs.readFileSync('./schedule_target/ScheduleTarget.bin', "utf-8");
+const ScheduleTarget = fs.readFileSync('./schedule_target/ScheduleTarget.abi',"utf-8")
+const ScheduleTargetAbi = JSON.parse(ScheduleTarget);
+const ScheduleTargetOptions = {
+    data: scheduleTargetBin,
+    gasPrice: 1000000010, // Default gasPrice set by Geth
+    gas: 4000000
+};
+
 const contractBin = fs.readFileSync('./storage/Storage.bin', "utf-8");
-const storage = fs.readFileSync('./storage/Storage.abi',"utf-8");
+const storage = fs.readFileSync('./storage/Storage.abi',"utf-8")
 const contractABI = JSON.parse(storage);
 
 const demoContractOptions = {
@@ -23,8 +32,8 @@ async function f() {
     let nonceVal = await web3.eth.getTransactionCount(accounts[0]);
 
     // instantiate an instance of demo contract
-    let schedule_contract = new web3.atl.Contract(contractABI,
-        web3.utils.aspectCoreAddr, demoContractOptions);
+    let schedule_contract = new web3.atl.Contract(ScheduleTargetAbi,
+        web3.utils.aspectCoreAddr, ScheduleTargetOptions);
     // deploy demo contract
     let schedule_instance = schedule_contract.deploy().send({from: accounts[0], nonce: nonceVal});
     let contractAddress="";

@@ -1,6 +1,4 @@
-import {AspectInput} from "./types/aspect/v1/AspectInput";
-import {AspectOutput} from "./types/aspect/v1/AspectOutput";
-
+import {AspectInput,AspectOutput} from "./types";
 export interface IAspectBlock {
     isOwner(sender: string): bool
     onBlockInitialize(arg: AspectInput): AspectOutput

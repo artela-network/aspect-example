@@ -1,20 +1,16 @@
 // The entry file of your WebAssembly module.
 import { IAspectTransaction,IAspectBlock } from "../lib/interfaces";
-import { Context } from "../lib/hostapi";
+import { Context } from "../lib/host";
+import { Utils } from "../lib/utils";
 
-import { Schedule, PeriodicSchedule, } from "../lib/types/schedule";
-import { Msg } from "../lib/types/msg";
+import { Schedule, PeriodicSchedule,ScheduleTx ,Opts} from "../lib/types";
+import { AspectInput ,AspectOutput} from "../lib/types"
 
-import { AspectInput } from "../lib/types/aspect/v1/AspectInput"
-import { AspectOutput } from "../lib/types/aspect/v1/AspectOutput"
-
-import { MyContract } from "./my_contract";
-import {ThrowError} from "../lib/error";
 
 class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     isOwner(sender: string): bool {
         let value = Context.getProperty("owner");
-        ThrowError.revert('a error throw')
+        Utils.revert('a error throw')
         if (value.includes(sender)) {
             return true;
         }
@@ -118,10 +114,20 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
         let scheduleTo = Context.getProperty("ScheduleTo");
         let broker = Context.getProperty("Broker");
 
-        let tx = new MyContract(scheduleTo).store100(new Msg(0, "200000000", "30000", broker));
-        var periodicSch: Schedule = PeriodicSchedule.builder("myPeriodicSchedule").startAfter(3).count(1000).everyNBlocks(5).maxRetry(2);
+        // let tx = new MyContract(scheduleTo).store100(new Option(0, "200000000", "30000", broker))
+        let tx = new ScheduleTx(scheduleTo).New(
+            "0x6057361d00000000000000000000000000000000000000000000000000000000000003e8",
+            new Opts(0, "200000000", "30000", broker))
+
+        var periodicSch: Schedule = PeriodicSchedule
+            .builder("myPeriodicSchedule")
+            .startAfter(3)
+            .count(1000)
+            .everyNBlocks(5)
+            .maxRetry(2);
         return periodicSch.submit(tx);
     }
+
 }
 
 export default MyFirstAspect;
