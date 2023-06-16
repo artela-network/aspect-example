@@ -1,15 +1,15 @@
 // The entry file of your WebAssembly module.
-import { IAspectTransaction,IAspectBlock } from "../lib/interfaces";
+import { IAspectTransaction, IAspectBlock } from "../lib/interfaces";
 import { Context } from "../lib/host";
 import { Storage } from "./contract_storage"
-import { Schedule, PeriodicSchedule,ScheduleTx ,Opts} from "../lib/types";
-import { AspectInput ,AspectOutput} from "../lib/types"
+import { Schedule, PeriodicSchedule, ScheduleTx, Opts } from "../lib/types";
+import { AspectInput, AspectOutput } from "../lib/types"
 
-class MyFirstAspect implements IAspectTransaction,IAspectBlock {
+class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     isOwner(sender: string): bool {
         let value = Context.getProperty("owner");
         if (value.includes(sender)) {
-             return true;
+            return true;
         }
         return false;
     }
@@ -52,8 +52,8 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
 
         // schedule a tx
         this.scheduleTx();
-        ret.success=true;
-        ret.message=k1;
+        ret.success = true;
+        ret.message = k1;
         return ret;
     }
 
@@ -103,7 +103,9 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
         if (input.tx != null) {
             let num1 = new Storage.number(input.tx!.to);
             let num1_latest = num1.latest();
-            Context.setContext("number1_latest", num1_latest!.change.toString())
+            if (num1_latest != null) {
+                Context.setContext("number1_latest", num1_latest!.change.toString())
+            }
 
             let account = new Storage.accounts(input.tx!.to);
             let tom_balance_latest = account.person("tom").balance().latest();
@@ -115,7 +117,7 @@ class MyFirstAspect implements IAspectTransaction,IAspectBlock {
             }
         }
         ret.success = true;
-       ret.message=Context.getContext("account_person_tome_balance_latest_change")
+        ret.message = Context.getContext("account_person_tome_balance_latest_change")
         return ret;
     }
 

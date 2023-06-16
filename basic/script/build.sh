@@ -9,7 +9,7 @@ for dir in $proto_dirs; do
   proto_files=$(find "${dir}" -maxdepth 1 -name '*.sol')
   for file in $proto_files; do
     # Check if the go_package in the file is pointing to evmos
-      solc -o ./contracts/temp --optimize --abi --bin $file  --overwrite
+      solc -o ./contracts/temp --via-ir --abi --bin $file  --overwrite
       filePath=${file##*/}
       filename=${filePath%%.*}
       rm -rf ./build/$filename
