@@ -67,7 +67,7 @@ export class Context {
         let inputValue = new AString();
         inputValue.set(value);
         let ptrValue = inputValue.store();
-        return   __HostApi__.setContext(inPtr, ptrValue);
+        return __HostApi__.setContext(inPtr, ptrValue);
     }
 
     static getContext(key: string): string {

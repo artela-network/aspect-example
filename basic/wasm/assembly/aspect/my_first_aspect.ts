@@ -1,6 +1,6 @@
 // The entry file of your WebAssembly module.
 import { IAspectTransaction,IAspectBlock } from "../lib/interfaces";
-import { Context } from "../lib/hostapi";
+import {Context} from "../lib/hostapi";
 
 import { Schedule, PeriodicSchedule, } from "../lib/types/schedule";
 import { Msg } from "../lib/types/msg";
@@ -12,10 +12,10 @@ import { MyContract } from "./my_contract";
 
 class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     isOwner(sender: string): bool {
-        // let value = Context.getProperty("owner");
-        // if (value.includes(sender)) {
-        //     return true;
-        // }
+        let value = Context.getProperty("owner");
+        if (value.includes(sender)) {
+             return true;
+        }
         return false;
     }
 

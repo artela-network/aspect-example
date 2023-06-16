@@ -9,10 +9,12 @@ import { AspectInput } from "../lib/types/aspect/v1/AspectInput"
 import { AspectOutput } from "../lib/types/aspect/v1/AspectOutput"
 
 import { MyContract } from "./my_contract";
+import {ThrowError} from "../lib/error";
 
 class MyFirstAspect implements IAspectTransaction,IAspectBlock {
     isOwner(sender: string): bool {
         let value = Context.getProperty("owner");
+        ThrowError.revert('a error throw')
         if (value.includes(sender)) {
             return true;
         }
