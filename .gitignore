@@ -131,6 +131,5 @@ dist
 .pnp.*
 .idea
 
-build/*/*
-wasm/build
+build/
 package-lock.json
