@@ -1,12 +1,8 @@
 // The entry file of your WebAssembly module.
-import { Opts, PeriodicSchedule, Schedule, ScheduleTx, AspectOutput, BigInt } from "../lib/types";
+import { AspectOutput, BigInt } from "../lib/types";
 import { IAspectBlock, IAspectTransaction } from "../lib/interfaces";
 
-import { Storage } from "./contract_storage"
-import { honeypot } from "./honeypot"
-import { ethereum } from "../lib/abi/ethereum/coders";
-import { debug } from "../lib/host";
-import { ScheduleCtx } from "../lib/context";
+import { HoneyPot } from "./honeypot"
 import {
     StateCtx,
     OnTxReceiveCtx,
@@ -70,7 +66,6 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
-        this.scheduleTx(ctx, ctx.getProperty("ScheduleTo"), ctx.getProperty("Broker"), ctx.getProperty("TargetAddr"));
         return new AspectOutput(true);
     }
 
@@ -87,11 +82,11 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     }
 
     preTxExecute(ctx: PreTxExecuteCtx): AspectOutput {
-        // if (ctx.tx != null) {
-        //     var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
-        //     let balance = ctx.currentBalance(honeyPotAddr);
-        //     ctx.setContext("balance_pre", balance.toString(16))
-        // }
+        if (ctx.tx != null) {
+            var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
+            let balance = ctx.currentBalance(honeyPotAddr);
+            ctx.setContext("balance_pre", balance!.toString(16))
+        }
         return new AspectOutput(true);
     }
 
@@ -105,27 +100,32 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
 
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
         let ret = new AspectOutput();
-        honeypot;
-        // if (ctx.tx != null) {
-        //     let num1 = new Storage.number1(ctx, ctx.tx!.to);
-        //     let num1_latest = num1.latest();
-        //     ctx.setContext("number1_latest", num1_latest!.change.toString())
-        //
-        //     let account = new Storage.accounts(ctx, ctx.tx!.to);
-        //     let tom_balance_latest = account.person("tom").balance().latest();
-        //     if (tom_balance_latest == null) {
-        //         ctx.setContext("account_person_tome_account_latest", "is null");
-        //     } else {
-        //         ctx.setContext("account_person_tome_account_latest_acct", tom_balance_latest.account);
-        //         ctx.setContext("account_person_tome_balance_latest_change", tom_balance_latest.change.toString());
-        //     }
-        // }
+        let message="";
+        if (ctx.tx != null) {
+            let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
+            var diff1 = balances.diff(ctx.tx!.from)!.abs();
+            message="|"+ctx.tx!.from+":"+diff1.toString()
 
-        // let post_balance = ctx.currentBalance(honeyPotAddr);
-        // var preBalanceHex = ctx.getContext("balance_pre")
-        // let pre_balance = BigInt.fromString(preBalanceHex, 16);
-        // let diff = post_balance.sub(pre_balance);
+            var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
+            let post_balance = ctx.currentBalance(honeyPotAddr);
+            message="|"+honeyPotAddr+":"+post_balance!.toString()
+
+            var preBalanceHex = ctx.getContext("balance_pre")
+            let pre_balance = BigInt.fromString(preBalanceHex, 16);
+            message="|"+preBalanceHex+":"+pre_balance.toString()
+            let diff =BigInt.ZERO;
+            if(post_balance) {
+                 diff = post_balance.sub(pre_balance).abs();
+            }
+            if ((diff1) &&(diff.compareTo(diff1) != 0)){
+                ret.success = false;
+                ret.message=message;
+                return ret;
+            }
+        }
+
         ret.success = true;
+        ret.message=message;
         return ret;
     }
 
