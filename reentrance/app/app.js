@@ -164,8 +164,9 @@ async function f() {
     result= await honeyPotContract.balances(attackAddress).call({from: honeypotDeployer, nonce: honeyPotNonceVal + 4})
     console.log("==== attackAddress  balance info==="+ result);
 
-    result= await attackAddress.balance().call({from: honeypotDeployer, nonce: honeyPotNonceVal + 4})
-    console.log("==== attackAddress  balance info==="+ result);
+    const balance = await web3.eth.getBalancePromise(attackAddress)
+    console.log("==== attackAddress  balance info==="+web3.utils.fromWei(balance, 'ether') + ' ETH')
+
 
 
 }
