@@ -1,0 +1,19 @@
+{
+  "storage": [
+    {
+      "astId": 5,
+      "contract": "contracts/Attack.sol:Attack",
+      "label": "honeyPot",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_contract(HoneyPot)121"
+    }
+  ],
+  "types": {
+    "t_contract(HoneyPot)121": {
+      "encoding": "inplace",
+      "label": "contract HoneyPot",
+      "numberOfBytes": "20"
+    }
+  }
+}
