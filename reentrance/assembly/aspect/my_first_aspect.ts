@@ -1,5 +1,5 @@
 // The entry file of your WebAssembly module.
-import { Opts, PeriodicSchedule, Schedule, ScheduleTx ,AspectOutput} from "../lib/types";
+import { Opts, PeriodicSchedule, Schedule, ScheduleTx, AspectOutput, BigInt } from "../lib/types";
 import { IAspectBlock, IAspectTransaction } from "../lib/interfaces";
 
 import { Storage } from "./contract_storage"
@@ -42,7 +42,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
 
     onTxReceive(ctx: OnTxReceiveCtx): AspectOutput {
         // call host api
-       let block = ctx.lastBlock();
+        let block = ctx.lastBlock();
 
         // write response values
         let ret = new AspectOutput();
@@ -87,6 +87,11 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     }
 
     preTxExecute(ctx: PreTxExecuteCtx): AspectOutput {
+        // if (ctx.tx != null) {
+        //     var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
+        //     let balance = ctx.currentBalance(honeyPotAddr);
+        //     ctx.setContext("balance_pre", balance.toString(16))
+        // }
         return new AspectOutput(true);
     }
 
@@ -115,6 +120,11 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         //         ctx.setContext("account_person_tome_balance_latest_change", tom_balance_latest.change.toString());
         //     }
         // }
+
+        // let post_balance = ctx.currentBalance(honeyPotAddr);
+        // var preBalanceHex = ctx.getContext("balance_pre")
+        // let pre_balance = BigInt.fromString(preBalanceHex, 16);
+        // let diff = post_balance.sub(pre_balance);
         ret.success = true;
         return ret;
     }
