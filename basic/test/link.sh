@@ -1,6 +1,6 @@
 #!/bin/bash
 
-web3jsDir=/Users/jack/Projects/js/web3.js
+web3jsDir=/Users/yuanyuan/go/src/github.com/artela-network/web3.js
 currentDir=$(pwd)
 
 packages=()
