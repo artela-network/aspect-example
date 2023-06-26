@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 echo "compile contract starting...."
 rm -rf ./build/contract/
-solcjs --abi --bin --include-path ./node_modules/ --base-path . -o ./build/contract/  ./contracts/*.sol
+solc -o ./build/contract/ --via-ir --abi --bin ./contracts/*.sol  --overwrite
+
 echo "compile contract success."

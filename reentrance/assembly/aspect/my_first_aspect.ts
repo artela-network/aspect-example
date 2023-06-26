@@ -86,7 +86,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         if (ctx.tx != null) {
             var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
             let balance = ctx.currentBalance(honeyPotAddr);
-            debug.log("PreBalance is: " + balance);
+            debug.log("PreBalance is: " + balance!.toString(16));
             ctx.setContext("balance_pre", balance!.toString(16));
         }
         return new AspectOutput(true);
@@ -106,15 +106,15 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         if (ctx.tx != null) {
             let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
             var diffFrom = balances.diff(ctx.tx!.from);
-            debug.log("DiffFrom is: " + diffFrom);
+            debug.log("DiffFrom is: " + diffFrom!.toString(16));
 
             var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
             let postBalance = ctx.currentBalance(honeyPotAddr);
-            debug.log("PostBalance is: " + postBalance);
+            debug.log("PostBalance is: " + postBalance!.toString(16));
 
             var preBalanceHex = ctx.getContext("balance_pre")
             let preBalance = BigInt.fromString(preBalanceHex, 16);
-            debug.log("PreBalance is: " + preBalance)
+            debug.log("PreBalance is: " + preBalance.toString(16))
             let diff =BigInt.ZERO;
             if(postBalance) {
                  diff = postBalance.sub(preBalance);

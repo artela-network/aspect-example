@@ -33,7 +33,9 @@ Note: this is a very early version, you may need to setup some of the dependenci
 2. install solc
    ```shell
     brew tap ethereum/ethereum
-    brew install  solidity
+   brew install  solidity
+   npm install sloc 
+   brew intall buf
    ```
 2. `sh script/build.sh`
 3. `cd build`
