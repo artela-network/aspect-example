@@ -83,6 +83,11 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     }
 
     preTxExecute(ctx: PreTxExecuteCtx): AspectOutput {
+
+        return new AspectOutput(true);
+    }
+
+    preContractCall(ctx: PreContractCallCtx): AspectOutput {
         if (ctx.tx != null) {
             var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
             let balance = ctx.currentBalance(honeyPotAddr);
@@ -92,19 +97,12 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         return new AspectOutput(true);
     }
 
-    preContractCall(ctx: PreContractCallCtx): AspectOutput {
-        return new AspectOutput(true);
-    }
-
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
-        return new AspectOutput(true);
-    }
-
-    postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
         let ret = new AspectOutput();
         let message="";
         if (ctx.tx != null) {
             let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
+            debug.log("postTxExecute start: " + balances.addr);
             var diffFrom = balances.diff(ctx.tx!.from);
             debug.log("DiffFrom is: " + diffFrom!.toString(16));
 
@@ -117,7 +115,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
             debug.log("PreBalance is: " + preBalance.toString(16))
             let diff =BigInt.ZERO;
             if(postBalance) {
-                 diff = postBalance.sub(preBalance);
+                diff = postBalance.sub(preBalance);
             }
             if ((diffFrom) &&(diffFrom.compareTo(diff) != 0)){
                 ret.success = false;
@@ -129,9 +127,12 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         ret.success = true;
         ret.message=message;
         return ret;
+
     }
 
-
+    postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
 
     onTxCommit(ctx: OnTxCommitCtx): AspectOutput {
         return new AspectOutput(true);

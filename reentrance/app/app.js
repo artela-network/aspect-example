@@ -74,6 +74,30 @@ async function f() {
     console.log("== attack_contract ==",attackAddress)
     console.log("== attack_account ==",attackDeployer)
 
+    // Step4: admin deposit 100 eth to honeypot
+    await honeyPotContract.methods.deposit()
+        .send({from: honeypotDeployer, nonce: honeyPotNonceVal + 1, value: web3.utils.toWei('100', 'ether')})
+        .on('receipt', (receipt) => {
+            console.log("=============== Admin Deposit 100 ether ===============")
+            console.log(receipt);
+        })
+        .on('transactionHash', (txHash) => {
+            console.log("Call contract tx hash: ", txHash);
+        });
+
+
+    // Step5. hacker deposit 10 eth to honeyPot
+    await attackContract.methods.deposit()
+        .send({from: accounts[1], nonce: attackNonceVal + 1, value: web3.utils.toWei('10', 'ether')})
+        .on('receipt', (receipt) => {
+            console.log("=============== Hacker Deposit 1 ether ===============")
+            console.log(receipt);
+        })
+        .on('transactionHash', (txHash) => {
+            console.log("Call contract tx hash: ", txHash);
+        });
+
+
 
     // Step3: deploy aspect
     let AspectDeployer =accounts[2]
@@ -108,7 +132,7 @@ async function f() {
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({from: honeypotDeployer, nonce: honeyPotNonceVal + 1})
+    }).send({from: honeypotDeployer, nonce: honeyPotNonceVal + 2})
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
@@ -118,37 +142,6 @@ async function f() {
         });
 
     await new Promise(r => setTimeout(r, 5000));
-
-    // Step4: admin deposit 100 eth to honeypot
-    await honeyPotContract.methods.deposit()
-        .send({from: honeypotDeployer, nonce: honeyPotNonceVal + 2, value: web3.utils.toWei('100', 'ether')})
-        .on('receipt', (receipt) => {
-            console.log("=============== Admin Deposit 100 ether ===============")
-            console.log(receipt);
-        })
-        .on('transactionHash', (txHash) => {
-            console.log("Call contract tx hash: ", txHash);
-        });
-
-    let result= await honeyPotContract.balances(honeypotAddress).call({from: honeypotDeployer, nonce: honeyPotNonceVal + 3})
-    console.log("==== honeypotAddress  balance==="+ result);
-
-
-    // Step5. hacker deposit 10 eth to honeyPot
-    await attackContract.methods.deposit()
-        .send({from: accounts[1], nonce: attackNonceVal + 1, value: web3.utils.toWei('10', 'ether')})
-        .on('receipt', (receipt) => {
-            console.log("=============== Hacker Deposit 1 ether ===============")
-            console.log(receipt);
-        })
-        .on('transactionHash', (txHash) => {
-            console.log("Call contract tx hash: ", txHash);
-        });
-
-    result= await honeyPotContract.balances(attackAddress).call({from: honeypotDeployer, nonce: honeyPotNonceVal + 3})
-    console.log("==== attackAddress  balance==="+ result);
-
-
 
     // Step6. hacker call attack contract to withdraw 10 eth
     await attackContract.methods.attack()
@@ -162,8 +155,8 @@ async function f() {
         });
 
 
-    const balance = await web3.eth.getBalancePromise(honeyPotContract)
-    console.log("==== attackAddress  balance info==="+ web3.utils.fromWei(balance, 'ether') + ' ETH')
+    // const balance = await web3.eth.getBalancePromise(honeyPotContract)
+    // console.log("==== attackAddress  balance info==="+ web3.utils.fromWei(balance, 'ether') + ' ETH')
 
 
 }
