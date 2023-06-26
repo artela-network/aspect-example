@@ -4,8 +4,8 @@
 const Web3 = require('web3');
 const fs = require("fs");
 
-const attackBin = fs.readFileSync('../build/contract/contracts_Attack_sol_Attack.bin', "utf-8");
-const attackTarget = fs.readFileSync('../build/contract/contracts_Attack_sol_Attack.abi',"utf-8")
+const attackBin = fs.readFileSync('../build/contract/Attack.bin', "utf-8");
+const attackTarget = fs.readFileSync('../build/contract/Attack.abi',"utf-8")
 const attackAbi = JSON.parse(attackTarget);
 const attackOptions = {
     data: attackBin,
@@ -13,8 +13,8 @@ const attackOptions = {
     gas: 4000000
 };
 
-const HoneyPotBin = fs.readFileSync('../build/contract/contracts_HoneyPot_sol_HoneyPot.bin', "utf-8");
-const HoneyPotTarget = fs.readFileSync('../build/contract/contracts_HoneyPot_sol_HoneyPot.abi',"utf-8")
+const HoneyPotBin = fs.readFileSync('../build/contract/HoneyPot.bin', "utf-8");
+const HoneyPotTarget = fs.readFileSync('../build/contract/HoneyPot.abi',"utf-8")
 const HoneyPotAbi = JSON.parse(HoneyPotTarget);
 const honeypotOptions = {
     data: HoneyPotBin,

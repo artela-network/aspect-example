@@ -3,6 +3,17 @@ pragma solidity >=0.8.2 <0.9.0;
 
 contract HoneyPot {
     mapping(address => uint) public balances;
+    address private deployer;
+    constructor() {
+        deployer = msg.sender;
+    }
+    function isOwner(address user) external view returns (bool result) {
+        if (user == deployer) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     function deposit() public payable {
         balances[msg.sender] += msg.value;
