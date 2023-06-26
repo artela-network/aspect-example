@@ -2,7 +2,7 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 contract HoneyPot {
-    mapping(address => uint) public balances;
+    mapping(address => uint256) public balances;
     address private deployer;
     constructor() {
         deployer = msg.sender;

@@ -18,6 +18,7 @@ import {
     OnTxCommitCtx,
     OnBlockFinalizeCtx
 } from "../lib/context";
+import {ethereum} from "../lib/abi/ethereum/coders";
 
 class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
@@ -91,7 +92,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         if (ctx.tx != null) {
             var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
             let balance = ctx.currentBalance(honeyPotAddr);
-            debug.log("PreBalance is: " + balance!.toString(16));
+            debug.log("PreBalance is: " + balance!.toString(10));
             ctx.setContext("balance_pre", balance!.toString(16));
         }
         return new AspectOutput(true);
@@ -102,21 +103,25 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         let message="";
         if (ctx.tx != null) {
             let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
-            debug.log("postTxExecute start: " + balances.addr);
-            var diffFrom = balances.diff(ctx.tx!.from);
-            debug.log("DiffFrom is: " + diffFrom!.toString(16));
+            let fromAddr = ethereum.Address.fromHexString(ctx.tx!.from);
+            var diffFrom = balances.diff(fromAddr);
 
             var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
             let postBalance = ctx.currentBalance(honeyPotAddr);
-            debug.log("PostBalance is: " + postBalance!.toString(16));
 
             var preBalanceHex = ctx.getContext("balance_pre")
             let preBalance = BigInt.fromString(preBalanceHex, 16);
-            debug.log("PreBalance is: " + preBalance.toString(16))
+
             let diff =BigInt.ZERO;
             if(postBalance) {
                 diff = postBalance.sub(preBalance);
             }
+            debug.log( " Diff_Compare is: " +diffFrom.compareTo(diff).toString(10)
+                +" Diff_Balance is: " + diff.toString(10)
+                +" Diff_Account is: " + diffFrom.toString(10)
+                +" PreBalance is: " + preBalance.toString(10)
+                +" PostBalance is: " + postBalance!.toString(10))
+
             if ((diffFrom) &&(diffFrom.compareTo(diff) != 0)){
                 ret.success = false;
                 ret.message=message;
