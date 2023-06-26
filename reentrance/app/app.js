@@ -108,7 +108,7 @@ async function f() {
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({from: attackDeployer, nonce: attackNonceVal + 1})
+    }).send({from: honeypotDeployer, nonce: honeyPotNonceVal + 1})
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
@@ -121,7 +121,7 @@ async function f() {
 
     // Step4: admin deposit 100 eth to honeypot
     await honeyPotContract.methods.deposit()
-        .send({from: honeypotDeployer, nonce: honeyPotNonceVal + 1, value: web3.utils.toWei('100', 'ether')})
+        .send({from: honeypotDeployer, nonce: honeyPotNonceVal + 2, value: web3.utils.toWei('100', 'ether')})
         .on('receipt', (receipt) => {
             console.log("=============== Admin Deposit 100 ether ===============")
             console.log(receipt);
@@ -130,7 +130,7 @@ async function f() {
             console.log("Call contract tx hash: ", txHash);
         });
 
-    let result= await honeyPotContract.balances(honeypotAddress).call({from: honeypotDeployer, nonce: honeyPotNonceVal + 2})
+    let result= await honeyPotContract.balances(honeypotAddress).call({from: honeypotDeployer, nonce: honeyPotNonceVal + 3})
     console.log("==== honeypotAddress  balance==="+ result);
 
 
