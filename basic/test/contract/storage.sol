@@ -37,6 +37,8 @@ contract Storage {
 
     mapping(string => Person) public accounts;
 
+    mapping(address => mapping(address => uint256)) public allowances;
+
     /**
      * @dev Store value in variable
      * @param num value to store
@@ -47,7 +49,12 @@ contract Storage {
         // number3 = 3000;
         // str1 = "hello";
         // bool1 = true;
+        // address a = 0xA32576Bd17b4e9dDfFaD917068F80A4ff7b7409a;
+        // address b = 0xBC0E48f5d2A48350B74c81ECed3A42b35b532ef8;
         accounts["tom"] = Person(101, 9900);
+        allowances[0xA32576Bd17b4e9dDfFaD917068F80A4ff7b7409a][
+            0xBC0E48f5d2A48350B74c81ECed3A42b35b532ef8
+        ] = 80;
     }
 
     /**

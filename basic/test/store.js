@@ -82,8 +82,9 @@ async function f() {
             console.log("call contract tx hash: ", txHash);
         });
 
-    let result = await contract.methods.retrieve().call({ from: accounts[0], nonce: nonceVal + 4 })
-    console.log("==== reuslt===" + result);
+    console.log("========end========")
+    // let result = await contract.methods.retrieve().call({ from: accounts[0], nonce: nonceVal + 4 })
+    // console.log("==== reuslt===" + result);
 
 
 }
