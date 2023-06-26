@@ -1,6 +1,7 @@
 // The entry file of your WebAssembly module.
 import { AspectOutput, BigInt } from "../lib/types";
 import { IAspectBlock, IAspectTransaction } from "../lib/interfaces";
+import { debug } from "../lib/host";
 
 import { HoneyPot } from "./honeypot"
 import {
@@ -85,7 +86,8 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         if (ctx.tx != null) {
             var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
             let balance = ctx.currentBalance(honeyPotAddr);
-            ctx.setContext("balance_pre", balance!.toString(16))
+            debug.log("PreBalance is: " + balance);
+            ctx.setContext("balance_pre", balance!.toString(16));
         }
         return new AspectOutput(true);
     }
@@ -103,21 +105,21 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         let message="";
         if (ctx.tx != null) {
             let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
-            var diff1 = balances.diff(ctx.tx!.from)!.abs();
-            message="|"+ctx.tx!.from+":"+diff1.toString()
+            var diffFrom = balances.diff(ctx.tx!.from);
+            debug.log("DiffFrom is: " + diffFrom);
 
             var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
-            let post_balance = ctx.currentBalance(honeyPotAddr);
-            message="|"+honeyPotAddr+":"+post_balance!.toString()
+            let postBalance = ctx.currentBalance(honeyPotAddr);
+            debug.log("PostBalance is: " + postBalance);
 
             var preBalanceHex = ctx.getContext("balance_pre")
-            let pre_balance = BigInt.fromString(preBalanceHex, 16);
-            message="|"+preBalanceHex+":"+pre_balance.toString()
+            let preBalance = BigInt.fromString(preBalanceHex, 16);
+            debug.log("PreBalance is: " + preBalance)
             let diff =BigInt.ZERO;
-            if(post_balance) {
-                 diff = post_balance.sub(pre_balance).abs();
+            if(postBalance) {
+                 diff = postBalance.sub(preBalance);
             }
-            if ((diff1) &&(diff.compareTo(diff1) != 0)){
+            if ((diffFrom) &&(diffFrom.compareTo(diff) != 0)){
                 ret.success = false;
                 ret.message=message;
                 return ret;
