@@ -1,9 +1,10 @@
 import { Protobuf } from 'as-proto/assembly';
 import { Abi } from "../lib/host";
-import { State } from "../lib/states"
-import { utils } from "../lib/utils"
-import { BigInt } from "../lib/types"
-import { TraceCtx } from '../lib/context'
+import { State } from "../lib/states";
+import { utils } from "../lib/utils";
+import { BigInt } from "../lib/types";
+import { TraceCtx } from "../lib/context";
+import { ethereum } from "../lib/abi/ethereum/coders";
 export namespace HoneyPot {
   export class balances {
     ctx: TraceCtx;
@@ -14,8 +15,8 @@ export namespace HoneyPot {
       this.addr = addr;
       this.prefix = prefix;
     }
-    public before(key: string): State<BigInt> | null {
-    let encoded = Abi.encodeString(key);
+    public before(key: ethereum.Address): State<BigInt> | null {
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, "HoneyPot.balances", utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length == 0) {
         return null;
@@ -26,8 +27,8 @@ export namespace HoneyPot {
         let value = BigInt.fromString(valueHex, 16);
     return new State(account, value);
   }
-    public changes(key: string): Array<State<BigInt>> | null {
-    let encoded = Abi.encodeString(key);
+    public changes(key: ethereum.Address): Array<State<BigInt>> | null {
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, "HoneyPot.balances", utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length == 0) {
         return null;
@@ -42,8 +43,8 @@ export namespace HoneyPot {
     }
     return res;
   }
-    public latest(key: string): State<BigInt> | null {
-    let encoded = Abi.encodeString(key);
+    public latest(key: ethereum.Address): State<BigInt> | null {
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, "HoneyPot.balances", utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length == 0) {
         return null;
@@ -55,8 +56,8 @@ export namespace HoneyPot {
         let value = BigInt.fromString(valueHex, 16);
     return new State(account, value);
   }
-    public diff(key: string): BigInt  | null {
-    let encoded = Abi.encodeString(key);
+    public diff(key: ethereum.Address): BigInt  | null {
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, "HoneyPot.balances", utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length < 2) {
         return null;

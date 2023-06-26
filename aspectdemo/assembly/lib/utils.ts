@@ -1,4 +1,5 @@
 import { AString, AUint8Array } from "./types";
+import { ethereum } from “./abi/ethereum/coders”;
 
 declare namespace __Util__ {
     function fromHexString(input: i32): i32;
@@ -27,6 +28,11 @@ export namespace utils {
         }
 
         return Uint8Array.wrap(buffer, 0, s.length);
+    }
+
+    export function uint8ArrayToAddress(data: Uint8Array): ethereum.Address {
+        let hex = String.UTF8.decode(data.buffer, false);
+        return ethereum.Address.fromHexString(hex);
     }
 
     export function uint8ArrayToString(arr: Uint8Array): string {
