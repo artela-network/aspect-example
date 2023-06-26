@@ -28,7 +28,7 @@ export namespace ArtToken {
     return new State(account, value);
   }
     public changes(key: ethereum.Address): Array<State<BigInt>> | null {
-    let encoded = Abi.encodeethereum.Address(key);
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, "ArtToken._balances", utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length == 0) {
         return null;
@@ -44,7 +44,7 @@ export namespace ArtToken {
     return res;
   }
     public latest(key: ethereum.Address): State<BigInt> | null {
-    let encoded = Abi.encodeethereum.Address(key);
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, "ArtToken._balances", utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length == 0) {
         return null;
@@ -57,7 +57,7 @@ export namespace ArtToken {
     return new State(account, value);
   }
     public diff(key: ethereum.Address): BigInt  | null {
-    let encoded = Abi.encodeethereum.Address(key);
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, "ArtToken._balances", utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length < 2) {
         return null;
@@ -110,7 +110,7 @@ export namespace ArtToken {
     return new State(account, value);
   }
     public changes(key: ethereum.Address): Array<State<BigInt>> | null {
-    let encoded = Abi.encodeethereum.Address(key);
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, this.variable, utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length == 0) {
         return null;
@@ -126,7 +126,7 @@ export namespace ArtToken {
     return res;
   }
     public latest(key: ethereum.Address): State<BigInt> | null {
-    let encoded = Abi.encodeethereum.Address(key);
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, this.variable, utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length == 0) {
         return null;
@@ -139,7 +139,7 @@ export namespace ArtToken {
     return new State(account, value);
   }
     public diff(key: ethereum.Address): BigInt  | null {
-    let encoded = Abi.encodeethereum.Address(key);
+    let encoded = Abi.encodeAddress(key);
     let changes = this.ctx.getStateChanges(this.addr, this.variable, utils.concatUint8Arrays(this.prefix, encoded));
     if (changes.all.length < 2) {
         return null;
