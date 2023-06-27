@@ -80,7 +80,7 @@ export namespace ArtToken {
       this.addr = addr;
       this.prefix = prefix;
     }
-    public value(key: string): _allowances.Value {
+    public value(key: ethereum.Address): _allowances.Value {
         let encoded = Abi.encodeAddress(key);
         return new _allowances.Value(this.ctx, this.addr, "ArtToken._allowances", utils.concatUint8Arrays(this.prefix, encoded));
     }

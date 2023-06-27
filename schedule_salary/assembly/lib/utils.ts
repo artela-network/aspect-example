@@ -1,5 +1,5 @@
 import { AString, AUint8Array } from "./types";
-import { ethereum } from “./abi/ethereum/coders”;
+import { ethereum } from "./abi/ethereum/coders";
 
 declare namespace __Util__ {
     function fromHexString(input: i32): i32;

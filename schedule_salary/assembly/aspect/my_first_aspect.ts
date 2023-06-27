@@ -2,7 +2,7 @@
 import { Opts, PeriodicSchedule, Schedule, ScheduleTx ,AspectOutput} from "../lib/types";
 import { IAspectBlock, IAspectTransaction } from "../lib/interfaces";
 
-import { Storage } from "./contract_storage"
+import { ArtToken } from "./token_storage"
 import { ethereum } from "../lib/abi/ethereum/coders";
 import { debug } from "../lib/host";
 import { ScheduleCtx } from "../lib/context";
@@ -99,20 +99,16 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
 
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
         let ret = new AspectOutput();
-        // if (ctx.tx != null) {
-        //     let num1 = new Storage.number1(ctx, ctx.tx!.to);
-        //     let num1_latest = num1.latest();
-        //     ctx.setContext("number1_latest", num1_latest!.change.toString())
-        //
-        //     let account = new Storage.accounts(ctx, ctx.tx!.to);
-        //     let tom_balance_latest = account.person("tom").balance().latest();
-        //     if (tom_balance_latest == null) {
-        //         ctx.setContext("account_person_tome_account_latest", "is null");
-        //     } else {
-        //         ctx.setContext("account_person_tome_account_latest_acct", tom_balance_latest.account);
-        //         ctx.setContext("account_person_tome_balance_latest_change", tom_balance_latest.change.toString());
-        //     }
-        // }
+        if (ctx.tx != null) {
+            let schedule = ctx.getProperty("ScheduleTo");
+            let scheduleAddr = ethereum.Address.fromHexString(schedule);
+
+            let num1 = new ArtToken._balances(ctx, ctx.tx!.to);
+            let num1_latest = num1.diff(scheduleAddr);
+            if(num1_latest) {
+                debug.log("scheduleAddr balance " + num1_latest.toString(10))
+            }
+        }
         ret.success = true;
         return ret;
     }
