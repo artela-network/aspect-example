@@ -109,6 +109,17 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
             return ret;
         }
         let innerCount  = BigInt.fromString(count, 10);
+
+        let honeyPotAddr = ctx.getProperty("HoneyPotAddr");
+        let contractBalance = ctx.currentBalance(honeyPotAddr);
+        let fromBalance = ctx.currentBalance(ctx.tx!.from);
+        if(contractBalance && fromBalance) {
+            debug.log("innerCount is: " + innerCount.toString(10)
+                + " honeyPotAddr CurrentBalance is:" +contractBalance.toString(10)
+                + " fromBalance CurrentBalance is:" +fromBalance.toString(10)
+            )
+        }
+
         // >1 return false
         if ( innerCount.compareTo(BigInt.fromInt32(1))>0){
             ret.success = false;
