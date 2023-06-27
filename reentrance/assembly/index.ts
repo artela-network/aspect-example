@@ -2,11 +2,13 @@
 
 import { Entry } from "./lib/entry";
 
-import aspect from "./aspect/my_first_aspect"
+//import Aspect from "./aspect/guard_by_trace_aspect"
+import Aspect from "./aspect/guard_by_count_aspect"
+
 import { utils } from "./lib/utils";
 
-let firstAspect = new aspect();
-var entry = new Entry(firstAspect, firstAspect);
+const firstAspect = new Aspect();
+const entry = new Entry(firstAspect, firstAspect);
 
 
 export function execute(methodPtr: i32, argPtr: i32): i32 {

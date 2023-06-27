@@ -18,9 +18,9 @@ import {
     OnTxCommitCtx,
     OnBlockFinalizeCtx
 } from "../lib/context";
-import {ethereum} from "../lib/abi/ethereum/coders";
 
-class MyFirstAspect implements IAspectTransaction, IAspectBlock {
+
+class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
         let value = ctx.getProperty("owner");
         if (value.includes(sender)) {
@@ -90,49 +90,32 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
 
     preContractCall(ctx: PreContractCallCtx): AspectOutput {
         if (ctx.tx != null) {
-            var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
-            let balance = ctx.currentBalance(honeyPotAddr);
-            debug.log("PreBalance is: " + balance!.toString(10));
-            ctx.setContext("balance_pre", balance!.toString(16));
+            let count = ctx.getContext("call_count");
+            let innerCount=BigInt.ZERO;
+            if (count!=""){
+                innerCount  = BigInt.fromString(count, 10);
+            }
+            innerCount= innerCount.add(BigInt.fromInt32(1));
+            debug.log("innerCount is: " + innerCount.toString(10));
+            ctx.setContext("call_count", innerCount.toString(10));
         }
         return new AspectOutput(true);
     }
 
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
-        let ret = new AspectOutput();
-        let message="";
-        if (ctx.tx != null) {
-            let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
-            let fromAddr = ethereum.Address.fromHexString(ctx.tx!.from);
-            var diffFrom = balances.diff(fromAddr);
-
-            var honeyPotAddr = ctx.getProperty("HoneyPotAddr");
-            let postBalance = ctx.currentBalance(honeyPotAddr);
-
-            var preBalanceHex = ctx.getContext("balance_pre")
-            let preBalance = BigInt.fromString(preBalanceHex, 16);
-
-            let diff =BigInt.ZERO;
-            if(postBalance) {
-                diff = postBalance.sub(preBalance);
-            }
-            debug.log( " Diff_Compare is: " +diffFrom.compareTo(diff).toString(10)
-                +" Diff_Balance is: " + diff.toString(10)
-                +" Diff_Account is: " + diffFrom.toString(10)
-                +" PreBalance is: " + preBalance.toString(10)
-                +" PostBalance is: " + postBalance!.toString(10))
-
-            if ((diffFrom) &&(diffFrom.compareTo(diff) != 0)){
-                ret.success = false;
-                ret.message=message;
-                return ret;
-            }
+        let ret = new AspectOutput(true);
+        let count = ctx.getContext("call_count");
+        if (count==""){
+            return ret;
         }
-
-        ret.success = true;
-        ret.message=message;
+        let innerCount  = BigInt.fromString(count, 10);
+        // >1 return false
+        if ( innerCount.compareTo(BigInt.fromInt32(1))>0){
+            ret.success = false;
+            ret.message="generate multiple inner transactions";
+            return ret;
+        }
         return ret;
-
     }
 
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
@@ -148,4 +131,4 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     }
 }
 
-export default MyFirstAspect;
+export default GuardByCountAspect;
