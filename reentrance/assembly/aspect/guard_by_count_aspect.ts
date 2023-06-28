@@ -89,13 +89,17 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
     }
 
     preContractCall(ctx: PreContractCallCtx): AspectOutput {
+        // In this aspect, calculate the total amount to re-entry precontract,
+        // to avoid re-entrance attach.
+
         if (ctx.tx != null) {
+            // step 1. update the call count to context.
             let count = ctx.getContext("call_count");
-            let innerCount=BigInt.ZERO;
-            if (count!=""){
-                innerCount  = BigInt.fromString(count, 10);
+            let innerCount = BigInt.ZERO;
+            if (count != "") {
+                innerCount = BigInt.fromString(count, 10);
             }
-            innerCount= innerCount.add(BigInt.fromInt32(1));
+            innerCount = innerCount.add(BigInt.fromInt32(1));
             debug.log("innerCount is: " + innerCount.toString(10));
             ctx.setContext("call_count", innerCount.toString(10));
         }
@@ -105,25 +109,26 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
         let ret = new AspectOutput(true);
         let count = ctx.getContext("call_count");
-        if (count==""){
+        if (count == "") {
             return ret;
         }
-        let innerCount  = BigInt.fromString(count, 10);
+        let innerCount = BigInt.fromString(count, 10);
 
+        // print the balance of "HonePot" contract and "Attach" contract
         let honeyPotAddr = ctx.getProperty("HoneyPotAddr");
         let contractBalance = ctx.currentBalance(honeyPotAddr);
         let fromBalance = ctx.currentBalance(ctx.tx!.from);
-        if(contractBalance && fromBalance) {
+        if (contractBalance && fromBalance) {
             debug.log("innerCount is: " + innerCount.toString(10)
-                + " honeyPotAddr CurrentBalance is:" +contractBalance.toString(10)
-                + " fromBalance CurrentBalance is:" +fromBalance.toString(10)
+                + " honeyPotAddr CurrentBalance is:" + contractBalance.toString(10)
+                + " fromBalance CurrentBalance is:" + fromBalance.toString(10)
             )
         }
 
-        // >1 return false
-        if ( innerCount.compareTo(BigInt.fromInt32(1))>0){
+        // Step 2. If the call count large than 1, mark the transaction as failed.
+        if (innerCount.compareTo(BigInt.fromInt32(1)) > 0) {
             ret.success = false;
-            ret.message="generate multiple inner transactions";
+            ret.message = "generate multiple inner transactions";
             return ret;
         }
         return ret;

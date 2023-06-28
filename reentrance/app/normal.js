@@ -1,6 +1,9 @@
 "use strict"
 
-//todo modify it
+///
+/// Here is a test scenario where a successful reentrancy attack occurs and results in the theft of the balance
+///
+
 const Web3 = require('web3');
 const fs = require("fs");
 
@@ -36,9 +39,14 @@ async function f() {
 
 
     // Step1: deploy honeypot contract to artela
+    //
+    // HoneyPot is an asset management contract that keeps track of the assets owned by users of HoneyPot. 
+    // The total recorded amount of these assets is mapped to the native assets held in the contract's account on the blockchain.
+    //
+    // Contract at: reentrance/contracts/HoneyPot.sol
     let honeyPotContract = new web3.atl.Contract(HoneyPotAbi,
         web3.utils.aspectCoreAddr, honeypotOptions);
-    let token_instance = honeyPotContract.deploy().send({from: honeypotDeployer, nonce: honeyPotNonceVal});
+    let token_instance = honeyPotContract.deploy().send({ from: honeypotDeployer, nonce: honeyPotNonceVal });
     let honeypotAddress = "";
     honeyPotContract = await token_instance.on('receipt', function (receipt) {
         console.log("=============== deployed contract ===============");
@@ -53,12 +61,17 @@ async function f() {
 
 
     // Step2: deploy attack contract to artela
+    //
+    // The "attach" contract is one of the users of HoneyPot and defines the "deposit" and "attach" (withdraw) methods.
+    // It use the contract call method to invoke the "deposit" and "withdraw" functions from the HoneyPot contract.
+    //
+    // Contract at: reentrance/contracts/Attack.sol
     let attackDeployer = accounts[1]
     let attackNonceVal = await web3.eth.getTransactionCount(attackDeployer);
 
     let attackContract = new web3.atl.Contract(attackAbi,
         web3.utils.aspectCoreAddr, attackOptions);
-    let attack_instance = attackContract.deploy({"arguments": [honeypotAddress]}).send({
+    let attack_instance = attackContract.deploy({ "arguments": [honeypotAddress] }).send({
         from: attackDeployer,
         nonce: attackNonceVal
     });
@@ -75,9 +88,11 @@ async function f() {
     console.log("== attack_contract ==", attackAddress)
     console.log("== attack_account ==", attackDeployer)
 
-    // Step4: admin deposit 100 eth to honeypot
+    // Step3: admin deposit 100 eth to honeypot
+    //
+    // The current recorded balance of HoneyPot is 100 ETH, and the on-chain balance of HoneyPot contract is also 100 ETH.
     await honeyPotContract.methods.deposit()
-        .send({from: honeypotDeployer, nonce: honeyPotNonceVal + 1, value: web3.utils.toWei('100', 'ether')})
+        .send({ from: honeypotDeployer, nonce: honeyPotNonceVal + 1, value: web3.utils.toWei('100', 'ether') })
         .on('receipt', (receipt) => {
             console.log("=============== Admin Deposit 100 ether ===============")
             console.log(receipt);
@@ -86,9 +101,12 @@ async function f() {
             console.log("Call contract tx hash: ", txHash);
         });
 
-    // Step5. hacker deposit 10 eth to honeyPot
+    // Step4. HoneyPot user "attach" deposit 10 eth to honeyPot.
+    //
+    // The recorded balance of HoneyPot has now increased to 110 ETH,
+    // and the on-chain balance of HonePot contract has also increased to 110 ETH.
     await attackContract.methods.deposit()
-        .send({from: accounts[1], nonce: attackNonceVal + 1, value: web3.utils.toWei('10', 'ether')})
+        .send({ from: accounts[1], nonce: attackNonceVal + 1, value: web3.utils.toWei('10', 'ether') })
         .on('receipt', (receipt) => {
             console.log("=============== Hacker Deposit 1 ether ===============")
             console.log(receipt);
@@ -99,9 +117,13 @@ async function f() {
 
 
     try {
-        // Step6. hacker call attack contract to withdraw 10 eth
+        // Step5. call "Attach" contract method "attack"
+        //
+        // The logic within the attach function will be triggered.
+        // Utilizing the code from the HoneyPot contract,
+        // an attempt is made to bypass the balance restriction and perform a withdrawal activity.
         await attackContract.methods.attack()
-            .send({from: accounts[1], nonce: attackNonceVal + 2})
+            .send({ from: accounts[1], nonce: attackNonceVal + 2 })
             .on('receipt', (receipt) => {
                 console.log("=============== Hacker Withdraw 10 ether ===============")
                 console.log(receipt);
@@ -113,6 +135,15 @@ async function f() {
         console.log(err);
     }
 
+    // Step6. check the balance of HoneyPot
+    //
+    //
+    // Here, the balance of HoneyPot is expected to remain at 100 ETH,
+    // Because the attached user has already withdrawn the 10 ETH they deposited.
+    // The balance of Attach is expect to 10 ETH.
+    //
+    // However, the actual balance of HoneyPot is 0 ETH.
+    // And the balance of Attach is 110 ETH. Because the attack was successful. 
     const balance = await web3.eth.getBalance(honeypotAddress);
     const attackBalance = await web3.eth.getBalance(attackAddress);
     console.log("==== honeyPotContract  balance info===" + web3.utils.fromWei(balance, 'ether') + ' ETH')

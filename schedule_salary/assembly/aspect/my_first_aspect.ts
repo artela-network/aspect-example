@@ -1,5 +1,5 @@
 // The entry file of your WebAssembly module.
-import { Opts, PeriodicSchedule, Schedule, ScheduleTx ,AspectOutput} from "../lib/types";
+import { Opts, PeriodicSchedule, Schedule, ScheduleTx, AspectOutput } from "../lib/types";
 import { IAspectBlock, IAspectTransaction } from "../lib/interfaces";
 
 import { ArtToken } from "./token_storage"
@@ -41,7 +41,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
 
     onTxReceive(ctx: OnTxReceiveCtx): AspectOutput {
         // call host api
-       let block = ctx.lastBlock();
+        let block = ctx.lastBlock();
 
         // write response values
         let ret = new AspectOutput();
@@ -69,6 +69,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
+        // schedule a salary payment
         this.scheduleTx(ctx, ctx.getProperty("ScheduleTo"), ctx.getProperty("Broker"), ctx.getProperty("TargetAddr"));
         return new AspectOutput(true);
     }
@@ -105,7 +106,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
 
             let num1 = new ArtToken._balances(ctx, ctx.tx!.to);
             let num1_latest = num1.diff(scheduleAddr);
-            if(num1_latest) {
+            if (num1_latest) {
                 debug.log("scheduleAddr balance " + num1_latest.toString(10))
             }
         }
@@ -123,18 +124,25 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
         return new AspectOutput(true);
     }
 
-    private scheduleTx(ctx: ScheduleCtx, scheduleTo: string, broker: string,target:string): bool {
-
+    private scheduleTx(ctx: ScheduleCtx, scheduleTo: string, broker: string, target: string): bool {
+        // prepare the transfer parameters, and encode them to abi input.
         let addr = ethereum.Address.fromHexString(target);
         let num = ethereum.Number.fromU64(100);
-        let payload = ethereum.abiEncode('transfer', [addr,num]);
+        let payload = ethereum.abiEncode('transfer', [addr, num]);
 
         debug.log(payload);
 
+        // the scheduled transaction with params.
         let tx = new ScheduleTx(scheduleTo).New(
             payload,
             new Opts(0, "200000000", "30000", broker))
 
+        // params:
+        // startAfter(3): the scheduled transaction will be trigger at the 3rd block after this method is called.
+        // count(1000): total count of schedulex transaction is 1000.
+        // everyNBlocks(5): execution at every 5th block since started.
+        // maxRetry(2): Transaction confirmation on the blockchain is not guaranteed but rather determined by the gas fee.
+        // If a transaction fails to be confirmed on the blockchain, it can be retried up to a maximum of two times.
         var periodicSch: Schedule = PeriodicSchedule
             .new(ctx, "myPeriodicSchedule")
             .startAfter(3)

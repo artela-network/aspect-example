@@ -18,7 +18,7 @@ import {
     OnTxCommitCtx,
     OnBlockFinalizeCtx
 } from "../lib/context";
-import {ethereum} from "../lib/abi/ethereum/coders";
+import { ethereum } from "../lib/abi/ethereum/coders";
 
 class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
@@ -93,61 +93,72 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     }
 
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
+        // NOTE:
+        // During the attack process, this method will be called multiple times.
+        // The following commented steps are arranged in chronological order based on the called sequence
+
         let ret = new AspectOutput(true);
-        let message="";
+        let message = "";
         if (ctx.tx != null) {
+            // the object to visit to the traced changes in the running EVM.
             let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
 
             let BalanceCtxKey = "original_balance";
 
+            // step 2. restore original balance of attach account save in step 1.
             let originalBalanceCtx = ctx.getContext(BalanceCtxKey);
             let fromAddr = ethereum.Address.fromHexString(ctx.tx!.from);
 
             // set first balance value
-            let originalBalance=BigInt.ZERO;
-            if (originalBalanceCtx!=""){
-                originalBalance= BigInt.fromString(originalBalanceCtx, 10);
-            }else {
+            let originalBalance = BigInt.ZERO;
+            if (originalBalanceCtx != "") {
+                originalBalance = BigInt.fromString(originalBalanceCtx, 10);
+            } else {
 
+                // step 1. get the original balance of pointed account, attach account here, by traced state changes.
+                // and save the context.
                 let fromBeforeBalance = balances.before(fromAddr);
-                if(fromBeforeBalance){
-                    ctx.setContext(BalanceCtxKey,fromBeforeBalance.change.toString(10));
-                    originalBalance=fromBeforeBalance.change;
+                if (fromBeforeBalance) {
+                    ctx.setContext(BalanceCtxKey, fromBeforeBalance.change.toString(10));
+                    originalBalance = fromBeforeBalance.change;
                 }
             }
 
+            // step 3. Get the changed amount of "attach" account
             let fromBalanceChange = balances.diff(fromAddr);
-            if(!fromBalanceChange){
+            if (!fromBalanceChange) {
                 return ret;
             }
             let BalanceChangeCtxKey = "sum_balance_change_value";
 
             let fromChangeBalance = ctx.getContext(BalanceChangeCtxKey);
-            let last_change_from_balance=BigInt.ZERO;
-            if (fromChangeBalance!=""){
-                last_change_from_balance= BigInt.fromString(fromChangeBalance, 10);
+            let last_change_from_balance = BigInt.ZERO;
+            if (fromChangeBalance != "") {
+                last_change_from_balance = BigInt.fromString(fromChangeBalance, 10);
             }
-            last_change_from_balance =last_change_from_balance.add(fromBalanceChange);
+            last_change_from_balance = last_change_from_balance.add(fromBalanceChange);
 
-            ctx.setContext(BalanceChangeCtxKey,last_change_from_balance.toString(10));
+            // step 4. Store all the changes of "attach" account
+            ctx.setContext(BalanceChangeCtxKey, last_change_from_balance.toString(10));
             let resultBalance = originalBalance.add(last_change_from_balance);
 
             let honeyPotAddr = ctx.getProperty("HoneyPotAddr");
             let contractBalance = ctx.currentBalance(honeyPotAddr);
             let fromBalance = ctx.currentBalance(ctx.tx!.from);
-            if(contractBalance && fromBalance) {
+            if (contractBalance && fromBalance) {
                 debug.log("original_balance is: " + originalBalance.toString(10)
                     + " diff_Balance is: " + fromBalanceChange.toString(10)
                     + " last_change_from_balance is: " + last_change_from_balance.toString(10)
                     + " result_balance is: " + resultBalance.toString(10)
-                    + " honeyPotAddr CurrentBalance is:" +contractBalance.toString(10)
-                    + " fromBalance CurrentBalance is:" +fromBalance.toString(10)
+                    + " honeyPotAddr CurrentBalance is:" + contractBalance.toString(10)
+                    + " fromBalance CurrentBalance is:" + fromBalance.toString(10)
                 )
             }
 
-            if(resultBalance.compareTo(BigInt.fromInt32(0))==-1){
+            // step 5. Check the sum of changed amount more than original balance, mark the tx failed.
+            if (resultBalance.compareTo(BigInt.fromInt32(0)) == -1) {
                 ret.success = false;
-                ret.message= "balance is less than zero";
+                ret.message = "balance is less than zero";
                 return ret;
             }
         }
