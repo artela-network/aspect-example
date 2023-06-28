@@ -22,6 +22,9 @@ import {
 
 class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
+        // to retrieve the properties of an aspect, pass the key "owner" associated with the aspect,
+        // which is deployed together with it.
+        // the properity is depoly like 'properties: [{ 'key': 'owner', 'value': AspectDeployer }...'
         let value = ctx.getProperty("owner");
         if (value.includes(sender)) {
             return true;
@@ -30,6 +33,8 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
     }
 
     onContractBinding(ctx: StateCtx, contractAddr: string): bool {
+        // to retrieve the properties of current aspect, pass the key "binding" associated with the aspect,
+        // which is deployed together with it.
         let value = ctx.getProperty("binding");
         if (value.includes(contractAddr)) {
             return true;
@@ -39,32 +44,7 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
     onTxReceive(ctx: OnTxReceiveCtx): AspectOutput {
-        // call host api
-        let block = ctx.lastBlock();
-
-        // write response values
-        let ret = new AspectOutput();
-        ret.success = true;
-
-        // add test data
-        ctx.setContext("k1", "v1");
-        ctx.setContext("k2", "v2");
-
-        // // add hostapi return data
-        if (block) {
-            let header = block.header ? block.header : null;
-            if (header) {
-                ctx.setContext("lastBlockNum", header.number.toString());
-            } else {
-                ctx.setContext("lastBlockNum", "empty");
-            }
-        } else {
-            ctx.setContext("lastBlockNum", "not found");
-        }
-        const k1 = ctx.getContext("k1");
-        ret.success = true;
-        ret.message = k1;
-        return ret;
+        return new AspectOutput(true);
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
@@ -94,13 +74,17 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
         if (ctx.tx != null) {
             // step 1. update the call count to context.
+            // getContext: retireve a key-value pair in the blockchain state, all aspect shares.
             let count = ctx.getContext("call_count");
+
             let innerCount = BigInt.ZERO;
             if (count != "") {
                 innerCount = BigInt.fromString(count, 10);
             }
             innerCount = innerCount.add(BigInt.fromInt32(1));
             debug.log("innerCount is: " + innerCount.toString(10));
+
+            // setContext: store a key-value pair in the blockchain state, all aspect shares.
             ctx.setContext("call_count", innerCount.toString(10));
         }
         return new AspectOutput(true);
@@ -108,6 +92,8 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
         let ret = new AspectOutput(true);
+
+        // getContext: retireve a key-value pair in the blockchain state, all aspect shares.
         let count = ctx.getContext("call_count");
         if (count == "") {
             return ret;
@@ -115,7 +101,12 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         let innerCount = BigInt.fromString(count, 10);
 
         // print the balance of "HonePot" contract and "Attach" contract
+        // getProperty: to retrieve the properties of an aspect, pass the key "owner" associated with the aspect,
+        //   which is deployed together with it.
+        //   the properity is depoly like 'properties: [{ 'key': 'owner', 'value': AspectDeployer }...'
         let honeyPotAddr = ctx.getProperty("HoneyPotAddr");
+
+        // currentBalance: Always return the latest balance value, and if there is a transaction execution in progress, return the temporarily stored value.
         let contractBalance = ctx.currentBalance(honeyPotAddr);
         let fromBalance = ctx.currentBalance(ctx.tx!.from);
         if (contractBalance && fromBalance) {

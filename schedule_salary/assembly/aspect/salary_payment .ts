@@ -21,7 +21,7 @@ import {
     OnBlockFinalizeCtx
 } from "../lib/context";
 
-class MyFirstAspect implements IAspectTransaction, IAspectBlock {
+class SalaryPayment implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
         let value = ctx.getProperty("owner");
         if (value.includes(sender)) {
@@ -40,32 +40,7 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
 
 
     onTxReceive(ctx: OnTxReceiveCtx): AspectOutput {
-        // call host api
-        let block = ctx.lastBlock();
-
-        // write response values
-        let ret = new AspectOutput();
-        ret.success = true;
-
-        // add test data
-        ctx.setContext("k1", "v1");
-        ctx.setContext("k2", "v2");
-
-        // // add hostapi return data
-        if (block) {
-            let header = block.header ? block.header : null;
-            if (header) {
-                ctx.setContext("lastBlockNum", header.number.toString());
-            } else {
-                ctx.setContext("lastBlockNum", "empty");
-            }
-        } else {
-            ctx.setContext("lastBlockNum", "not found");
-        }
-        const k1 = ctx.getContext("k1");
-        ret.success = true;
-        ret.message = k1;
-        return ret;
+        return new AspectOutput(true);
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
@@ -101,9 +76,14 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
         let ret = new AspectOutput();
         if (ctx.tx != null) {
+            // to retrieve the properties of an aspect, pass the key associated with the aspect,
+            // which is deployed together with it.
             let schedule = ctx.getProperty("ScheduleTo");
+
+            // convert to an address
             let scheduleAddr = ethereum.Address.fromHexString(schedule);
 
+            // call traced balance changes, print the diff
             let num1 = new ArtToken._balances(ctx, ctx.tx!.to);
             let num1_latest = num1.diff(scheduleAddr);
             if (num1_latest) {
@@ -153,4 +133,4 @@ class MyFirstAspect implements IAspectTransaction, IAspectBlock {
     }
 }
 
-export default MyFirstAspect;
+export default SalaryPayment;

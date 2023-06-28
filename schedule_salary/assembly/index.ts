@@ -2,11 +2,11 @@
 
 import { Entry } from "./lib/entry";
 
-import aspect from "./aspect/my_first_aspect"
+import aspect from "./aspect/salary_payment "
 import { utils } from "./lib/utils";
 
-let firstAspect = new aspect();
-var entry = new Entry(firstAspect, firstAspect);
+let salaryPayment = new aspect();
+var entry = new Entry(salaryPayment, salaryPayment);
 
 
 export function execute(methodPtr: i32, argPtr: i32): i32 {

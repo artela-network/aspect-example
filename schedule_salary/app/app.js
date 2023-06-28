@@ -90,7 +90,7 @@ async function f() {
 
     // Step 3. Deploy the aspect to chain
     //
-    // Aspect at: schedule_salary/assembly/aspect/my_first_aspect.ts
+    // Aspect at: schedule_salary/assembly/aspect/salary_payment.ts
     let aspectCode = fs.readFileSync('../build/release.wasm', {
         encoding: "hex"
     });

@@ -125,7 +125,6 @@ async function f() {
     //
     // Aspect at: 
     // - reentrance/assembly/aspect/guard_by_trace_aspect.ts
-    // - reentrance/assembly/aspect/guard_by_count_aspect.ts
     let AspectDeployer = accounts[2]
     let nonceValAspectDeployer = await web3.eth.getTransactionCount(AspectDeployer);
 

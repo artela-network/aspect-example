@@ -22,6 +22,9 @@ import { ethereum } from "../lib/abi/ethereum/coders";
 
 class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
+        // to retrieve the properties of an aspect, pass the key "owner" associated with the aspect,
+        // which is deployed together with it.
+        // the properity is depoly like 'properties: [{ 'key': 'owner', 'value': AspectDeployer }...'
         let value = ctx.getProperty("owner");
         if (value.includes(sender)) {
             return true;
@@ -30,6 +33,8 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     }
 
     onContractBinding(ctx: StateCtx, contractAddr: string): bool {
+        // to retrieve the properties of current aspect, pass the key "binding" associated with the aspect,
+        // which is deployed together with it.
         let value = ctx.getProperty("binding");
         if (value.includes(contractAddr)) {
             return true;
@@ -39,32 +44,7 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
 
 
     onTxReceive(ctx: OnTxReceiveCtx): AspectOutput {
-        // call host api
-        let block = ctx.lastBlock();
-
-        // write response values
-        let ret = new AspectOutput();
-        ret.success = true;
-
-        // add test data
-        ctx.setContext("k1", "v1");
-        ctx.setContext("k2", "v2");
-
-        // // add hostapi return data
-        if (block) {
-            let header = block.header ? block.header : null;
-            if (header) {
-                ctx.setContext("lastBlockNum", header.number.toString());
-            } else {
-                ctx.setContext("lastBlockNum", "empty");
-            }
-        } else {
-            ctx.setContext("lastBlockNum", "not found");
-        }
-        const k1 = ctx.getContext("k1");
-        ret.success = true;
-        ret.message = k1;
-        return ret;
+        return new AspectOutput(true);
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
@@ -95,17 +75,19 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
         // NOTE:
         // During the attack process, this method will be called multiple times.
-        // The following commented steps are arranged in chronological order based on the called sequence
+        // The following commented steps are arranged in chronological order based on the called sequence.
 
         let ret = new AspectOutput(true);
         let message = "";
         if (ctx.tx != null) {
-            // the object to visit to the traced changes in the running EVM.
+            // the object to visit to the traced changes.
+            // 'traced changes' refers to all the cached world state change values during the execution process of trasaction in EVM.
             let balances = new HoneyPot.balances(ctx, ctx.tx!.to);
 
             let BalanceCtxKey = "original_balance";
 
             // step 2. restore original balance of attach account save in step 1.
+            // getContext: Store/retireve a key-value pair in the blockchain state, all aspect shares.
             let originalBalanceCtx = ctx.getContext(BalanceCtxKey);
             let fromAddr = ethereum.Address.fromHexString(ctx.tx!.from);
 
@@ -117,6 +99,8 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
 
                 // step 1. get the original balance of pointed account, attach account here, by traced state changes.
                 // and save the context.
+                // balance.before: get the original value of 'fromAddr' of traced balances changes.
+                //   'trace' refers to all the cached world state change values during the execution process of trasaction in EVM.
                 let fromBeforeBalance = balances.before(fromAddr);
                 if (fromBeforeBalance) {
                     ctx.setContext(BalanceCtxKey, fromBeforeBalance.change.toString(10));
@@ -125,12 +109,14 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
             }
 
             // step 3. Get the changed amount of "attach" account
+            // balances.diff: return the difference between the latest value and the original value of tranced balances changes.
             let fromBalanceChange = balances.diff(fromAddr);
             if (!fromBalanceChange) {
                 return ret;
             }
             let BalanceChangeCtxKey = "sum_balance_change_value";
 
+            // getContext: retireve a key-value pair in the blockchain state, all aspect shares.
             let fromChangeBalance = ctx.getContext(BalanceChangeCtxKey);
             let last_change_from_balance = BigInt.ZERO;
             if (fromChangeBalance != "") {
@@ -139,10 +125,14 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
             last_change_from_balance = last_change_from_balance.add(fromBalanceChange);
 
             // step 4. Store all the changes of "attach" account
+            // setContext: store a key-value pair in the blockchain state, all aspect shares.
             ctx.setContext(BalanceChangeCtxKey, last_change_from_balance.toString(10));
             let resultBalance = originalBalance.add(last_change_from_balance);
 
+            // property means the aspect property, depolyed along with aspect.
             let honeyPotAddr = ctx.getProperty("HoneyPotAddr");
+
+            // currentBalance: Always return the latest balance value, and if there is a transaction execution in progress, return the temporarily stored value.
             let contractBalance = ctx.currentBalance(honeyPotAddr);
             let fromBalance = ctx.currentBalance(ctx.tx!.from);
             if (contractBalance && fromBalance) {
@@ -156,7 +146,7 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
             }
 
             // step 5. Check the sum of changed amount more than original balance, mark the tx failed.
-            if (resultBalance.compareTo(BigInt.fromInt32(0)) == -1) {
+            if (resultBalance.compareTo(BigInt.fromInt32(0)) < 0) {
                 ret.success = false;
                 ret.message = "balance is less than zero";
                 return ret;
