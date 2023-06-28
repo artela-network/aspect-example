@@ -2,8 +2,8 @@
 
 import { Entry } from "./lib/entry";
 
-//import Aspect from "./aspect/guard_by_trace_aspect"
-import Aspect from "./aspect/guard_by_count_aspect"
+import Aspect from "./aspect/guard_by_trace_aspect"
+//import Aspect from "./aspect/guard_by_count_aspect"
 
 import { utils } from "./lib/utils";
 
