@@ -1,9 +1,9 @@
 // The entry file of your WebAssembly module.
+
 import { Opts, PeriodicSchedule, Schedule,ScheduleTx } from "@artela/aspect-libs/scheduler";
 import { IAspectBlock, IAspectTransaction } from "@artela/aspect-libs/types";
 import { AspectOutput  } from "@artela/aspect-libs/proto";
 
-import { ArtToken } from "./token_storage"
 import { ethereum } from "@artela/aspect-libs/abi";
 import { debug } from "@artela/aspect-libs/host";
 import {
@@ -22,7 +22,8 @@ import {
     OnBlockFinalizeCtx
 } from "@artela/aspect-libs/entry";
 
-class SalaryPayment implements IAspectTransaction, IAspectBlock {
+
+class ScheduleStoreAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
         let value = ctx.getProperty("owner");
         if (value.includes(sender)) {
@@ -39,14 +40,43 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
         return false;
     }
 
-
     onTxReceive(ctx: OnTxReceiveCtx): AspectOutput {
-        return new AspectOutput(true);
+        // call host api
+        let block = ctx.lastBlock();
+
+        // write response values
+        let ret = new AspectOutput();
+        ret.success = true;
+
+        // add test data
+        ctx.setContext("k1", "v1");
+        ctx.setContext("k2", "v2");
+
+        // add hostapi return data
+        if (block) {
+            let header = block.header ? block.header : null;
+            if (header) {
+                ctx.setContext("lastBlockNum", header.number.toString());
+            } else {
+                ctx.setContext("lastBlockNum", "empty");
+            }
+        } else {
+            ctx.setContext("lastBlockNum", "not found");
+        }
+
+        const k1 = ctx.getContext("k1");
+        const k2 = ctx.getContext("k2");
+        const lastBlockNum = ctx.getContext("lastBlockNum");
+
+
+        ret.success = true;
+        ret.message = k1;
+        return ret;
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
-        // schedule a salary payment
-        this.scheduleTx(ctx, ctx.getProperty("ScheduleTo"), ctx.getProperty("Broker"), ctx.getProperty("TargetAddr"));
+        // schedule a tx
+        this.scheduleTx(ctx, ctx.getProperty("ScheduleTo"), ctx.getProperty("Broker"));
         return new AspectOutput(true);
     }
 
@@ -74,25 +104,10 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
         return new AspectOutput(true);
     }
 
+
+
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
-        let ret = new AspectOutput();
-        if (ctx.tx != null) {
-            // to retrieve the properties of an aspect, pass the key associated with the aspect,
-            // which is deployed together with it.
-            let schedule = ctx.getProperty("ScheduleTo");
-
-            // convert to an address
-            let scheduleAddr = ethereum.Address.fromHexString(schedule);
-
-            // call traced balance changes, print the diff
-            let num1 = new ArtToken._balances(ctx, ctx.tx!.to);
-            let num1_latest = num1.diff(scheduleAddr);
-            if (num1_latest) {
-                debug.log("scheduleAddr balance " + num1_latest.toString(10))
-            }
-        }
-        ret.success = true;
-        return ret;
+        return new AspectOutput(true);
     }
 
 
@@ -105,11 +120,10 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
         return new AspectOutput(true);
     }
 
-    private scheduleTx(ctx: ScheduleCtx, scheduleTo: string, broker: string, target: string): bool {
+    private scheduleTx(ctx: ScheduleCtx, scheduleTo: string, broker: string): bool {
         // prepare the transfer parameters, and encode them to abi input.
-        let addr = ethereum.Address.fromHexString(target);
         let num = ethereum.Number.fromU64(100);
-        let payload = ethereum.abiEncode('transfer', [addr, num]);
+        let payload = ethereum.abiEncode('store', [num]);
 
         debug.log(payload);
 
@@ -132,6 +146,7 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
             .maxRetry(2);
         return periodicSch.submit(tx);
     }
+
 }
 
-export default SalaryPayment;
+export default ScheduleStoreAspect;

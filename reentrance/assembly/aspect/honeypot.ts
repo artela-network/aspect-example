@@ -1,10 +1,11 @@
-import { Protobuf } from 'as-proto/assembly';
-import { Abi } from "../lib/host";
-import { State } from "../lib/states";
-import { utils } from "../lib/utils";
-import { BigInt } from "../lib/types";
-import { TraceCtx } from "../lib/context";
-import { ethereum } from "../lib/abi/ethereum/coders";
+
+import { Abi } from "@artela/aspect-libs/host";
+import { State } from "@artela/aspect-libs/states";
+import { utils } from "@artela/aspect-libs/common";
+import { BigInt } from "@artela/aspect-libs/message";
+import { TraceCtx } from "@artela/aspect-libs/entry";
+import { ethereum } from "@artela/aspect-libs/abi";
+
 export namespace HoneyPot {
   export class balances {
     ctx: TraceCtx;

@@ -1,9 +1,9 @@
 // The entry file of your WebAssembly module.
-import { AspectOutput, BigInt } from "../lib/types";
-import { IAspectBlock, IAspectTransaction } from "../lib/interfaces";
-import { debug } from "../lib/host";
+import { AspectOutput } from "@artela/aspect-libs/proto";
+import { IAspectBlock, IAspectTransaction } from "@artela/aspect-libs/types";
+import { debug } from "@artela/aspect-libs/host";
+import { BigInt } from "@artela/aspect-libs/message";
 
-import { HoneyPot } from "./honeypot"
 import {
     StateCtx,
     OnTxReceiveCtx,
@@ -17,8 +17,7 @@ import {
     PostTxExecuteCtx,
     OnTxCommitCtx,
     OnBlockFinalizeCtx
-} from "../lib/context";
-
+} from "@artela/aspect-libs/entry";
 
 class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {

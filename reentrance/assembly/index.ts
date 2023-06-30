@@ -1,11 +1,11 @@
 // The entry file of your WebAssembly module.
 
-import { Entry } from "./lib/entry";
+import { Entry } from "@artela/aspect-libs/entry";
 
 import Aspect from "./aspect/guard_by_trace_aspect"
 //import Aspect from "./aspect/guard_by_count_aspect"
 
-import { utils } from "./lib/utils";
+import { utils } from "@artela/aspect-libs/common";
 
 const firstAspect = new Aspect();
 const entry = new Entry(firstAspect, firstAspect);

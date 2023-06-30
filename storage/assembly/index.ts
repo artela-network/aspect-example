@@ -1,11 +1,11 @@
 // The entry file of your WebAssembly module.
 
 
-import Aspect from "./aspect/salary_payment "
+import ScheduleStoreAspect from "./aspect/store_aspect"
 import { Entry } from "@artela/aspect-libs/entry";
 import { utils } from "@artela/aspect-libs/common";
 
-let salaryPayment = new Aspect();
+let salaryPayment = new ScheduleStoreAspect();
 var entry = new Entry(salaryPayment, salaryPayment);
 
 
