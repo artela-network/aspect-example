@@ -72,12 +72,12 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         // In this aspect, calculate the total amount to re-entry precontract,
         // to avoid re-entrance attach.
 
-        if (ctx.tx != null) {
+        if (ctx.tx != null) { /** @cp under what situation it will be null? */ 
             // step 1. update the call count to context.
             // getContext: retireve a key-value pair in the blockchain state, all aspect shares.
-            let count = ctx.getContext("call_count");
+            let count = ctx.getContext("call_count"); /** @cp what happen if there are mutliple contract bound to it and triggered at same tx? */ 
 
-            let innerCount = BigInt.ZERO;
+            let innerCount = BigInt.ZERO; /** @cp how to understand "inner" Count? */ 
             if (count != "") {
                 innerCount = BigInt.fromString(count, 10);
             }
@@ -98,13 +98,13 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         if (count == "") {
             return ret;
         }
-        let innerCount = BigInt.fromString(count, 10);
+        let innerCount = BigInt.fromString(count, 10); // @cp why dose it use BigInt?
 
         // print the balance of "HonePot" contract and "Attach" contract
         // getProperty: to retrieve the properties of an aspect, pass the key "owner" associated with the aspect,
         //   which is deployed together with it.
         //   the properity is depoly like 'properties: [{ 'key': 'owner', 'value': AspectDeployer }...'
-        let honeyPotAddr = ctx.getProperty("HoneyPotAddr");
+        let honeyPotAddr = ctx.getProperty("HoneyPotAddr"); /** @cp they are unsue variables: honeyPotAddr, contractBalance, fromBalance*/ 
 
         // currentBalance: Always return the latest balance value, and if there is a transaction execution in progress, return the temporarily stored value.
         let contractBalance = ctx.currentBalance(honeyPotAddr);
@@ -118,7 +118,7 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
         // Step 2. If the call count large than 1, mark the transaction as failed.
         if (innerCount.compareTo(BigInt.fromInt32(1)) > 0) {
-            ret.success = false;
+            ret.success = false; /** @cp what's different between setting ret.sucess as false and calling revert api? */
             ret.message = "generate multiple inner transactions";
             return ret;
         }
