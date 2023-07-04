@@ -1,8 +1,8 @@
 // The entry file of your WebAssembly module.
-import { AspectOutput } from "@artela/aspect-libs/proto";
-import { IAspectBlock, IAspectTransaction } from "@artela/aspect-libs/types";
-import { debug } from "@artela/aspect-libs/host";
-import { BigInt } from "@artela/aspect-libs/message";
+import { AspectOutput } from "@artela/aspect-libs";
+import { IAspectBlock, IAspectTransaction } from "@artela/aspect-libs";
+import { debug } from "@artela/aspect-libs";
+import { BigInt } from "@artela/aspect-libs";
 
 import { HoneyPot } from "./honeypot"
 import {
@@ -18,8 +18,8 @@ import {
     PostTxExecuteCtx,
     OnTxCommitCtx,
     OnBlockFinalizeCtx
-} from "@artela/aspect-libs/entry";
-import { ethereum } from "@artela/aspect-libs/abi";
+} from "@artela/aspect-libs";
+import { ethereum } from "@artela/aspect-libs";
 
 class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {

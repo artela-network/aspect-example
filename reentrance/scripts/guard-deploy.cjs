@@ -30,7 +30,8 @@ const honeypotOptions = {
 
 async function f() {
     // init connection to Artela node
-    const web3 = new Web3('http://127.0.0.1:8545');
+
+    const web3 = new Web3('http://3.89.248.208:8545');
 
     // retrieve accounts
     let accounts = await web3.atl.getAccounts();
