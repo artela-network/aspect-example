@@ -78,8 +78,17 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
         // During the attack process, this method will be called multiple times.
         // The following commented steps are arranged in chronological order based on the called sequence.
 
+
         let ret = new AspectOutput(true);
         let message = "";
+        let sysbalance = new HoneyPot.SysBalance(ctx, ctx.tx!.to);
+        debug.log("\ngetting sysbalance...");
+        let sysbalance_changes = sysbalance.changes();
+        for (let i = 0; i < sysbalance_changes!.length; i++) {
+            debug.log("sysbalance_changes[" + i.toString() + "]: " + sysbalance_changes![i].change.toString());
+        }
+
+
         if (ctx.tx != null) {
             // the object to visit to the traced changes.
             // 'traced changes' refers to all the cached world state change values during the execution process of trasaction in EVM.
