@@ -2,8 +2,9 @@
 
 import { Entry } from "@artela/aspect-libs/entry";
 
-import Aspect from "./aspect/guard_by_trace_aspect"
+//import Aspect from "./aspect/guard_by_trace_aspect"
 //import Aspect from "./aspect/guard_by_count_aspect"
+import Aspect from "./aspect/guard_by_lock_aspect"
 
 import { utils } from "@artela/aspect-libs/common";
 

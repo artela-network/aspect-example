@@ -1,7 +1,6 @@
 // The entry file of your WebAssembly module.
 import { AspectOutput } from "@artela/aspect-libs/proto";
 import { IAspectBlock, IAspectTransaction } from "@artela/aspect-libs/types";
-import { debug } from "@artela/aspect-libs/host";
 import { BigInt } from "@artela/aspect-libs/message";
 
 import {
@@ -67,61 +66,33 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         return new AspectOutput(true);
     }
 
+    CONTEXT_KEY:String= "{InnerTxToAddr}_CALL_COUNT";
+
     preContractCall(ctx: PreContractCallCtx): AspectOutput {
-        // In this aspect, calculate the total amount to re-entry precontract,
-        // to avoid re-entrance attach.
+        /**
+         * Count the number of inner TX calls,and set it to Context
+         */
+        let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}",ctx.currInnerTx!.to.toString());
+        let contextCount = ctx.getContext(contextKey)
+        let callCount=  (contextCount != "")?BigInt.fromString(contextCount, 10): BigInt.ZERO
 
-        if (ctx.tx != null) {
-            // step 1. update the call count to context.
-            // getContext: retireve a key-value pair in the blockchain state, all aspect shares.
-            let count = ctx.getContext("call_count");
+        callCount = callCount.add(BigInt.fromInt32(1));
 
-            let innerCount = BigInt.ZERO;
-            if (count != "") {
-                innerCount = BigInt.fromString(count, 10);
-            }
-            innerCount = innerCount.add(BigInt.fromInt32(1));
-            debug.log("innerCount is: " + innerCount.toString(10));
-
-            // setContext: store a key-value pair in the blockchain state, all aspect shares.
-            ctx.setContext("call_count", innerCount.toString(10));
-        }
+        ctx.setContext(contextKey, callCount.toString());
         return new AspectOutput(true);
     }
 
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
-        let ret = new AspectOutput(true);
+        //get context
+        let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}",ctx.currInnerTx!.to.toString());
+        let contextCount = ctx.getContext(contextKey)
+        let callCount=  (contextCount != "")?BigInt.fromString(contextCount, 10): BigInt.ZERO
 
-        // getContext: retireve a key-value pair in the blockchain state, all aspect shares.
-        let count = ctx.getContext("call_count");
-        if (count == "") {
-            return ret;
+        // If the call count large than 1, mark the transaction as failed.
+        if (callCount.toInt64()>1) {
+           return  new AspectOutput(false,"multiple inner tx calls");
         }
-        let innerCount = BigInt.fromString(count, 10);
-
-        // print the balance of "HonePot" contract and "Attach" contract
-        // getProperty: to retrieve the properties of an aspect, pass the key "owner" associated with the aspect,
-        //   which is deployed together with it.
-        //   the properity is depoly like 'properties: [{ 'key': 'owner', 'value': AspectDeployer }...'
-        let honeyPotAddr = ctx.getProperty("HoneyPotAddr");
-
-        // currentBalance: Always return the latest balance value, and if there is a transaction execution in progress, return the temporarily stored value.
-        let contractBalance = ctx.currentBalance(honeyPotAddr);
-        let fromBalance = ctx.currentBalance(ctx.tx!.from);
-        if (contractBalance && fromBalance) {
-            debug.log("innerCount is: " + innerCount.toString(10)
-                + " honeyPotAddr CurrentBalance is:" + contractBalance.toString(10)
-                + " fromBalance CurrentBalance is:" + fromBalance.toString(10)
-            )
-        }
-
-        // Step 2. If the call count large than 1, mark the transaction as failed.
-        if (innerCount.compareTo(BigInt.fromInt32(1)) > 0) {
-            ret.success = false;
-            ret.message = "generate multiple inner transactions";
-            return ret;
-        }
-        return ret;
+        return new AspectOutput(true);
     }
 
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {

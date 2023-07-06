@@ -9,9 +9,8 @@ In this scenario, Aspect-Oriented Programming is employed to protect fund securi
 ├── app  // Node.js app,for Deployment, Binding , and Testing.
 ├── assembly // wasm code 
 │ ├── aspect // Aspect File
-│ ├── lib    // Aspect library
 ├── contracts // contracts  file
-├── script   // build script
+├── scripts   // deploy script
 
 ```
 ## Guide
@@ -22,13 +21,12 @@ If you are not familiar with these environments, please refer to external resour
 1. build smart contract and aspect
    ```shell
    cd .     
-   sh script/build.sh
+   npm run build-all
    ```
-2. run test 
+2.  deploy 
    ```shell
-   cd app
-   sh run-normal.sh // normal case, honeypot was attacked
-   sh run-app.sh   // aspect case,  protect honeypot
+   cd .
+   npm run deploy
    ```
 
 ## How it works?
