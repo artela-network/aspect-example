@@ -2,9 +2,8 @@
 import { AspectOutput } from "@artela/aspect-libs";
 import { IAspectBlock, IAspectTransaction } from "@artela/aspect-libs";
 import { debug } from "@artela/aspect-libs";
-import { BigInt } from "@artela/aspect-libs";
 
-import { HoneyPot } from "./honeypot"
+import { HoneyPotState } from "./honeypotstate"
 import {
     StateCtx,
     OnTxReceiveCtx,
@@ -20,6 +19,7 @@ import {
     OnBlockFinalizeCtx
 } from "@artela/aspect-libs";
 import { ethereum } from "@artela/aspect-libs";
+import { BigInt } from "@artela/aspect-libs/message";
 
 class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     isOwner(ctx: StateCtx, sender: string): bool {
@@ -74,26 +74,23 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     }
 
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
-        // NOTE:
-        // During the attack process, this method will be called multiple times.
-        // The following commented steps are arranged in chronological order based on the called sequence.
+        // 1.Calculate the eth balance change of DeFi SmartContract(HoneyPot) before and after tx.
+        let sysBalance = new HoneyPotState.SysBalance(ctx, ctx.currInnerTx!.to);
+        var deltaSys = sysBalance.last() - sysBalance.first();
 
-        let sysBalance = new HoneyPot.SysBalance(ctx, ctx.currInnerTx!.to);
-        var sysBalanceDiff = sysBalance.diff();
-
-        let balanceMonitor = new HoneyPot.balances(ctx, ctx.currInnerTx!.to);
-        let fromAddr = ethereum.Address.fromHexString(ctx.currInnerTx!.from);
-        let fromAddrBalanceDiff = balanceMonitor.diff(fromAddr);
-        if(!fromAddrBalanceDiff){
-            return  new AspectOutput(true);
+        // 2.Calculate the financial change of withdrawer in DeFi SmartContract(HoneyPot) before and after tx.
+        let contractState = new HoneyPotState.balances(ctx, ctx.currInnerTx!.to);
+        let withdrawer = ethereum.Address.fromHexString(ctx.currInnerTx!.from);
+        var deltaUser = 0;
+        if (contractState.isExist(withdrawer)) {
+            deltaUser = contractState.last(withdrawer) - contractState.first(withdrawer);
         }
-        debug.log(`===sysBalanceDiff:${sysBalanceDiff.toString(10)},fromAddrBalanceDiff:${fromAddrBalanceDiff.toString(10)}`)
 
-        if(sysBalanceDiff.compareTo(fromAddrBalanceDiff)!=0){
-            return new AspectOutput(false,"Balance change check failed");
+        // 3.Verify if the above two values are equal.
+        if(deltaSys.compareTo(deltaUser) == 0){
+            return new AspectOutput(true);
         }
-        return new AspectOutput(true);
-
+        return new AspectOutput(false, "risky transaction");
     }
 
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
