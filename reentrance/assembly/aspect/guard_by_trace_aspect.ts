@@ -76,14 +76,14 @@ class GuardByTraceAspect implements IAspectTransaction, IAspectBlock {
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
         // 1.Calculate the eth balance change of DeFi SmartContract(HoneyPot) before and after tx.
         let sysBalance = new HoneyPotState.SysBalance(ctx, ctx.currInnerTx!.to);
-        var deltaSys = sysBalance.now()?.change.sub(sysBalance.original()?.change);
+        var deltaSys = sysBalance.current()?.change.sub(sysBalance.original()?.change);
 
         // 2.Calculate the financial change of withdrawer in DeFi SmartContract(HoneyPot) before and after tx.
         let contractState = new HoneyPotState.balances(ctx, ctx.currInnerTx!.to);
         let withdrawer = ethereum.Address.fromHexString(ctx.currInnerTx!.from);
         var deltaUser = 0;
         if (contractState.isExist(withdrawer)) {
-            deltaUser = contractState.now(withdrawer)?.change.sub(contractState.original(withdrawer)?.change);
+            deltaUser = contractState.current(withdrawer)?.change.sub(contractState.original(withdrawer)?.change);
         }
 
         // 3.Verify if the above two values are equal.

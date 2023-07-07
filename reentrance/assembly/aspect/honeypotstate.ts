@@ -38,7 +38,7 @@ export namespace HoneyPotState {
       return res;
     }
 
-    public now(): State<BigInt> | null {
+    public current(): State<BigInt> | null {
       let changes = this.ctx.getStateChanges(this.addr, ".balance", this.prefix);
       if (changes.all.length == 0) {
         return null;
@@ -88,7 +88,7 @@ export namespace HoneyPotState {
       }
       return res;
     }
-    public now(key: ethereum.Address): State<BigInt> | null {
+    public current(key: ethereum.Address): State<BigInt> | null {
       let encoded = Abi.encodeAddress(key);
       let changes = this.ctx.getStateChanges(this.addr, "HoneyPot.balances", utils.concatUint8Arrays(this.prefix, encoded));
       if (changes.all.length == 0) {
