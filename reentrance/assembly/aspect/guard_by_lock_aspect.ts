@@ -68,29 +68,31 @@ class GuardByLockAspect implements IAspectTransaction, IAspectBlock {
         return new AspectOutput(true);
     }
 
-    CONTEXT_KEY: string = "{InnerTxToAddr}_LOCK";
-    LOCKED: string = "1";
-  //  UNLOCK: string = "0";
-
+    _CONTEXT_KEY: string = "{InnerTxToAddr}_LOCK";
+    _NOT_ENTERED: string = "0";
+    _ENTERED: string = "1";
     preContractCall(ctx: PreContractCallCtx): AspectOutput {
-
-        let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}", ctx.currInnerTx!.to.toString());
-        let isLock = ctx.getContext(contextKey)
-
-        debug.log(`===contextKey:${contextKey},isLock:${isLock}`)
-
-        if (isLock == this.LOCKED) {
-            return new AspectOutput(false, "Locked by other tx");
+        // 1.Get reentrant lock key of current contract.
+        let curContract = ctx.currInnerTx!.to.toString();
+        let reentKey = this._CONTEXT_KEY.replace("{InnerTxToAddr}", curContract);
+        
+        // 2.Check if another transaction has already occupied.
+        if (ctx.getContext(reentKey) == this._ENTERED) {
+            return new AspectOutput(false, "revert");
         }
 
-        ctx.setContext(contextKey, this.LOCKED);
+        // 3.Set reentrant lock entered.
+        ctx.setContext(reentKey, this._ENTERED);
         return new AspectOutput(true);
-
     }
 
     postContractCall(ctx: PostContractCallCtx): AspectOutput {
-        //get context
-        debug.log(`===PostContractCallCtx,isLock`)
+        // 1.Get reentrant lock key of current contract.
+        let curContract = ctx.currInnerTx!.to.toString();
+        let reentKey = this._CONTEXT_KEY.replace("{InnerTxToAddr}", curContract);
+        
+        // 2.Set reentrant lock not entered.
+        ctx.setContext(reentKey, this._NOT_ENTERED);
         return new AspectOutput(true);
     }
 
