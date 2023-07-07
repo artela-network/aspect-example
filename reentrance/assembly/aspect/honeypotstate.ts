@@ -10,7 +10,7 @@ export namespace HoneyPotState {
       this.addr = addr;
       this.prefix = prefix;
     }
-    public first(): State<BigInt> | null {
+    public original(): State<BigInt> | null {
       let changes = this.ctx.getStateChanges(this.addr, ".balance", this.prefix);
       if (changes.all.length == 0) {
         return null;
@@ -38,7 +38,7 @@ export namespace HoneyPotState {
       return res;
     }
 
-    public last(): State<BigInt> | null {
+    public now(): State<BigInt> | null {
       let changes = this.ctx.getStateChanges(this.addr, ".balance", this.prefix);
       if (changes.all.length == 0) {
         return null;
@@ -60,7 +60,7 @@ export namespace HoneyPotState {
       this.addr = addr;
       this.prefix = prefix;
     }
-    public first(key: ethereum.Address): State<BigInt> | null {
+    public original(key: ethereum.Address): State<BigInt> | null {
       let encoded = Abi.encodeAddress(key);
       let changes = this.ctx.getStateChanges(this.addr, "HoneyPot.balances", utils.concatUint8Arrays(this.prefix, encoded));
       if (changes.all.length == 0) {
@@ -88,7 +88,7 @@ export namespace HoneyPotState {
       }
       return res;
     }
-    public last(key: ethereum.Address): State<BigInt> | null {
+    public now(key: ethereum.Address): State<BigInt> | null {
       let encoded = Abi.encodeAddress(key);
       let changes = this.ctx.getStateChanges(this.addr, "HoneyPot.balances", utils.concatUint8Arrays(this.prefix, encoded));
       if (changes.all.length == 0) {
