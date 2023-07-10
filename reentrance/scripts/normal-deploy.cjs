@@ -28,7 +28,7 @@ const honeypotOptions = {
 
 async function f() {
     // init connection to Artela node
-    const web3 = new Web3('http://127.0.0.1:8545');
+    const web3 = new Web3('http://3.89.248.208:59633');
 
     // retrieve accounts
     let accounts = await web3.atl.getAccounts();
@@ -108,7 +108,7 @@ async function f() {
     await attackContract.methods.deposit()
         .send({ from: accounts[1], nonce: attackNonceVal + 1, value: web3.utils.toWei('10', 'ether') })
         .on('receipt', (receipt) => {
-            console.log("=============== Hacker Deposit 1 ether ===============")
+            console.log("=============== Hacker Deposit 10 ether ===============")
             console.log(receipt);
         })
         .on('transactionHash', (txHash) => {
