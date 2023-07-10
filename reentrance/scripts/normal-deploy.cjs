@@ -28,7 +28,8 @@ const honeypotOptions = {
 
 async function f() {
     // init connection to Artela node
-    const web3 = new Web3('http://3.89.248.208:59633');
+    const rpcUrl = 'https://artela-devnet-rpc1.artela.network';
+    const web3 = new Web3(rpcUrl);
 
     // retrieve accounts
     let accounts = await web3.atl.getAccounts();
