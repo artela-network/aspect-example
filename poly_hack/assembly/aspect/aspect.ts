@@ -1,0 +1,224 @@
+import {
+    AspectOutput,
+    IAspectBlock,
+    IAspectTransaction,
+    OnAccountVerifyCtx,
+    OnBlockFinalizeCtx,
+    OnBlockInitializeCtx,
+    OnGasPaymentCtx,
+    OnTxCommitCtx,
+    OnTxReceiveCtx,
+    OnTxVerifyCtx,
+    PostContractCallCtx,
+    PostTxExecuteCtx,
+    PreContractCallCtx,
+    PreTxExecuteCtx,
+    StateCtx,
+    Abi, State, utils, BigInt, TraceCtx, ethereum
+} from "@artela/aspect-libs";
+
+/**
+ * There are two types of Aspect: Transaction-Level Aspect and Block-Level Aspect.
+ * Transaction-Level Aspect will be triggered whenever there is a transaction calling the bound smart contract.
+ * Block-Level Aspect will be triggered whenever there is a new block generated.
+ * 
+ * An Aspect can be Transaction-Level, Block-Level or both.
+ * You can implement corresponding interfaces: IAspectTransaction, IAspectBlock or both to tell Artela which
+ * type of Aspect you are implementing.
+ */
+class Aspect implements IAspectTransaction, IAspectBlock {
+    /**
+     * onTxReceive is a join-point which will be invoked when the mem pool first
+     * received the transaction. Since it is a join-point outside the consensus stage,
+     * so at this join-point, no state or context can be persisted.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    onTxReceive(ctx: OnTxReceiveCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * onTxVerify is a join-point which will be invoked when verifying the transaction signature,
+     * customized verification method can be implemented at this join-point to support features like
+     * account abstraction.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    onTxVerify(ctx: OnTxVerifyCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * onAccountVerify is a join-point which will be invoked when verifying the transaction sender account,
+     * customized verification method can be implemented at this join-point to support features like
+     * account abstraction.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    onAccountVerify(ctx: OnAccountVerifyCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * onGasPayment is a join-point which will be invoked when processing gas fee payment,
+     * customized gas fee payment method can be implemented within this join-point.
+     * Please note that this join-point is still under development, so currently it will do nothing here.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    onGasPayment(ctx: OnGasPaymentCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * preTxExecute is a join-point which will be invoked before the transaction execution.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    preTxExecute(ctx: PreTxExecuteCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * preContractCall is a join-point which will be invoked before the contract call is executed. 
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    preContractCall(ctx: PreContractCallCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * postContractCall is a join-point which will be invoked after a contract has finished.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    postContractCall(ctx: PostContractCallCtx): AspectOutput {
+
+        // If a contract call led to state change of `ConKeepersPkBytes`, trigger the rule process of the guard 
+        let changes = ctx.getStateChanges(ctx.currInnerTx.to, "EthCrossChainData.ConKeepersPkBytes", new Uint8Array());
+        if (changes.all.length == 0) {
+            return new AspectOutput(true);
+        }
+
+        // Rule A. 
+        // Any state change of `ConKeepersPkBytes` *MUST* occur exclusively through 
+        // the method `changeBookKeeper` in `EthCrossChainManager`.
+
+        // 1. If the state ConKeepersPkBytes changes, the transaction MUST call to EthCrossChainManager, 
+        // and the method MUST be changeBookKeeper.
+        if (ctx.originalTx.to != ctx.getProperty("ETH_CROSS_CHAIN_MANAGER_ADDRESS")
+            || this.getMethodSignatureFromCallData(ctx.originalTx.input) != "0xCAFECAFE") {
+            ctx.revert("revert by guard: unexpected transaction entry point");
+        }
+
+        // 2. The new value of ConKeepersPkBytes must exactly match the parameters 
+        // in the changeBookKeeper method.
+        var newKeysInState = utils.uint8ArrayToHex(changes.all[changes.all.length - 1].value);
+        var newKeysInTxParams = this.getKeysParamFromCallData(ctx.originalTx.input);
+        if (newKeysInState != newKeysInTxParams) {
+            ctx.revert("revert by guard: unexpected process result");
+        }
+
+        return new AspectOutput(true);
+    }
+
+    getMethodSignatureFromCallData(callData: Uint8Array): string {
+        var callDataHex = utils.uint8ArrayToHex(callData);
+        return callDataHex.substring(0, 8);
+    }
+
+    getKeysParamFromCallData(callData: Uint8Array): string {
+        // function changeBookKeeper(bytes memory rawHeader, bytes memory pubKeyList, bytes memory sigList) whenNotPaused public returns(bool)
+        var paramsData = callData.subarray(4, callData.length - 1);
+        var sigListBytesLoacation = this.uint8ArrayToBigInt(paramsData.subarray(32 * 2, 32 * 3));
+        var sigListBytesContentLength = this.uint8ArrayToBigInt(paramsData.subarray(sigListBytesLoacation.toUInt32(), sigListBytesLoacation.toUInt32() + 32));
+        var sigListBytesContentPadLength = sigListBytesContentLength.toInt32() + (32 - sigListBytesContentLength.toInt32() / 32);
+
+        return utils.uint8ArrayToHex(
+            paramsData.subarray(sigListBytesLoacation.toInt32() + 32, sigListBytesContentPadLength));
+    }
+
+    uint8ArrayToBigInt(bytes: Uint8Array) {
+        return BigInt.fromString(utils.uint8ArrayToHex(bytes), 16);
+    }
+
+
+    /**
+     * postTxExecute is a join-point which will be invoked when the transaction execution is finished but state is not committed.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * onTxCommit is a join-point which will be invoked after the state of the transaction is committed.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    onTxCommit(ctx: OnTxCommitCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * onBlockInitialize is a join-point which will be invoked when a new block proposal is prepared.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * onBlockFinalize is a join-point which will be invoked when a block proposal has been finalized.
+     * 
+     * @param ctx context of the given join-point
+     * @return result of Aspect execution
+     */
+    onBlockFinalize(ctx: OnBlockFinalizeCtx): AspectOutput {
+        return new AspectOutput(true);
+    }
+
+    /**
+     * isOwner is the governance account implemented by the Aspect, when any of the governance operation
+     * (including upgrade, config, destroy) is made, isOwner method will be invoked to check
+     * against the initiator's account to make sure it has the permission.
+     * 
+     * @param ctx context of Aspect state
+     * @param sender address of the operation initiator
+     * @return true if check success, false if check fail
+     */
+    isOwner(ctx: StateCtx, initiator: string): bool {
+        // always return false on isOwner can make the Aspect immutable
+        return false;
+    }
+
+    /**
+     * onContractBinding is an Aspect lifecycle hook, it will be invoked by Aspect Core when
+     * a new smart contract is binding to this Aspect. Aspect can choose whether to allow the 
+     * binding request or not. The binding request will succeed if onContractBinding returns true,
+     * otherwise it will fail.
+     * 
+     * @param ctx context of Aspect state
+     * @param contractAddr address of the smart contract to binding with current Aspect
+     * @return true if binding succeed, otherwise false 
+     */
+    onContractBinding(ctx: StateCtx, contractAddr: string): bool {
+        return true;
+    }
+}
+
+export default Aspect;
