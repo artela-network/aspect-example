@@ -1,5 +1,5 @@
 // The entry file of your WebAssembly module.
-import { AspectOutput } from "@artela/aspect-libs/proto";
+import { AspectOutput,AspTransaction } from "@artela/aspect-libs/";
 import { IAspectBlock, IAspectTransaction } from "@artela/aspect-libs/types";
 import { BigInt } from "@artela/aspect-libs/message";
 
@@ -18,7 +18,20 @@ import {
   OnBlockFinalizeCtx,
 } from "@artela/aspect-libs/entry";
 
+
+import {AspectCtx} from "./aspect_ctx"
+
+
+
 class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
+
+  aspectCtx: AspectCtx | undefined
+  constructor(tx: AspTransaction | undefined) {
+    if(tx){
+      this.aspectCtx = new AspectCtx(tx);
+    }
+  }
+
   isOwner(ctx: StateCtx, sender: string): bool {
     // to retrieve the properties of an aspect, pass the key "owner" associated with the aspect,
     // which is deployed together with it.
@@ -103,6 +116,26 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
   onBlockFinalize(ctx: OnBlockFinalizeCtx): AspectOutput {
     return new AspectOutput(true);
+  }
+
+  @AspectOperation
+  add(one:Person):bool{
+    aspectCtx.setAspectState(one.name,one.age)
+
+    return true
+  }
+
+}
+class Person{
+  name:string
+  age:u32
+
+  constructor(name: string, age: u32) {
+    this.name = name;
+    this.age = age;
+  }
+  toString():string{
+    return `{"name":"${this.name}","age":${this.age}}`
   }
 }
 

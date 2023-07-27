@@ -75,27 +75,8 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
     }
 
     postTxExecute(ctx: PostTxExecuteCtx): AspectOutput {
-        let ret = new AspectOutput();
-        if (ctx.tx != null) {
-            // to retrieve the properties of an aspect, pass the key associated with the aspect,
-            // which is deployed together with it.
-            let schedule = ctx.getProperty("ScheduleTo");
-
-            // convert to an address
-            let scheduleAddr = ethereum.Address.fromHexString(schedule);
-
-            // call traced balance changes, print the diff
-            let num1 = new ArtToken._balances(ctx, ctx.tx!.to);
-            let num1_latest = num1.diff(scheduleAddr);
-            if (num1_latest) {
-                debug.log("scheduleAddr balance " + num1_latest.toString(10))
-            }
-        }
-        ret.success = true;
-        return ret;
+        return new AspectOutput(true);
     }
-
-
 
     onTxCommit(ctx: OnTxCommitCtx): AspectOutput {
         return new AspectOutput(true);
@@ -107,11 +88,9 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
 
     private scheduleTx(ctx: ScheduleCtx, scheduleTo: string, broker: string, target: string): bool {
         // prepare the transfer parameters, and encode them to abi input.
-        let addr = ethereum.Address.fromHexString(target);
-        let num = ethereum.Number.fromU64(100);
-        let payload = ethereum.abiEncode('transfer', [addr, num]);
-
-        debug.log(payload);
+        let paramAddr = ethereum.Address.fromHexString(target);
+        let paramNum = ethereum.Number.fromU64(100);
+        let payload = ethereum.abiEncode('transfer', [paramAddr, paramNum]);
 
         // the scheduled transaction with params.
         let tx = new ScheduleTx(scheduleTo).New(

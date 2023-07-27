@@ -68,10 +68,8 @@ class ScheduleStoreAspect implements IAspectTransaction, IAspectBlock {
         const k2 = ctx.getContext("k2");
         const lastBlockNum = ctx.getContext("lastBlockNum");
 
-
-        ret.success = true;
-        ret.message = k1;
-        return ret;
+        let message=`k1:${k1},k2:${k2},lastBlockNum:${lastBlockNum}`
+        return  new AspectOutput(true,message);
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): AspectOutput {
