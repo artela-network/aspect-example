@@ -15,7 +15,7 @@ const sendOption = {
 };
 
 
-async function f() {
+async function reentrant() {
     // init connection to Artela node
     const web3 = new Web3('https://artela-devnet-rpc1.artela.network');
 
@@ -131,4 +131,4 @@ async function f() {
     }
 }
 
-f().then();
+reentrant().catch(err => console.log(err));

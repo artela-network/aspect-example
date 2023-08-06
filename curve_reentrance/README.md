@@ -1,11 +1,11 @@
 
 # Curve Contract Reentrancy Guard
 
-## Instruction
+## Intro
 
 This is a sample Aspect that can prevent hacks similar to the [reentrant attack happened to Curve.fi on 2023.07](https://fortune.com/crypto/2023/07/31/curve-finance-52-million-hack-hacker-helps-return-funds/).
 
-Now let me briefly explain how this attack happens:
+This is  how the attack happens in short:
 
 1. The attacked Curve.fi pool is written in vyper (another smart contract lang can be compiled into EVM bytecode).
 2. The version of vyper they are using is 0.2.15, which is affected by a known reentrant lock issue in the compiler.
@@ -17,7 +17,7 @@ The example contract and Aspect provided in this repo are mainly the following 3
 
 **contracts/curve.vy**
 
-This is a simplified version of curve smart contract implemented with vyper. Similar to the Curve pool, it has two methods: `add_liquidity` and `remove_liquidity`, which are both guarded by the same reentrant lock. `AddLiquidity` and `RemoveLiquidity` events will be emitted when corresponding method gets called.
+This is a simplified version of Curve smart contract implemented with vyper. Similar to the Curve pool, it has two methods: `add_liquidity` and `remove_liquidity`, which are both guarded by the same reentrant lock. `AddLiquidity` and `RemoveLiquidity` events will be emitted when corresponding method gets called.
 
 **contracts/attack.sol**
 
@@ -25,7 +25,12 @@ This is a simplified version of attack contract implemented in solidity. It will
 
 **assembly/aspect/aspect.ts**
 
-This is a simple Aspect that can detect reentrant attack by checking the callstacks during the transaction execution, and it will revert the transaction if it observed any duplicate calls on the call path.
+This is a runtime reentrant protection Aspect that can detect reentrant attack by checking the callstacks during the transaction execution, and it will revert the transaction immediately if it observed any duplicate calls on the call path.
+
+To reproduce the attack and show how Aspect can protect runtime reentrancy, we have provided 2 files in the `scripts` folder: `curve-reentrancy` and `curve-reentrancy-with-aspect`, where,
+
+- `curve-reentrancy` will deploy the attack contract and Curve contract, and make the attack. You can observe a successful reentrancy by running this script.
+- `curve-reentrancy-with-aspect` will not only do the above steps but also deploy and bind the reentrancy protection Aspect to the Curve contract before the attack. You will observe a reentrancy failure by running this script, since the reentrancy will be stopped by the Aspect.
 
 ## Pre-requisites
 
@@ -36,7 +41,7 @@ To reproduce the attack, you need to install solc and vyper (specific version wi
    npm install -g solc@0.8.20
    ```
 
-## Reproduce steps
+## Run
 
 1. Build smart contracts and aspects
 
