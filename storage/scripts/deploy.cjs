@@ -75,21 +75,25 @@ async function f() {
     // instantiate an instance of aspect
     let aspect = new web3.atl.Aspect(
         web3.utils.aspectCoreAddr, demoContractOptions);
-    instance = aspect.deploy({
+    aspect = await aspect.deploy({
         data: '0x' + aspectCode,
-        properties: [{'key': 'ScheduleTo', 'value': contractAddress},{'key': 'Broker', 'value': accounts[0] },{'key': 'binding', 'value': contractAddr},{'key': 'owner', 'value': accounts[0] }]
-    }).send({from: accounts[0], nonce: nonceVal + 2});
+        properties: [{'key': 'ScheduleTo', 'value': contractAddress},{'key': 'Broker', 'value': accounts[0] },{'key': 'binding', 'value': contractAddr},{'key': 'owner', 'value': accounts[0] }],
+        paymaster: accounts[0],
+        proof: '0x0',
+    }).send({from: accounts[0], nonce: nonceVal + 2})
+        .on('receipt', (receipt) => {
+            console.log(receipt);
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy aspect tx hash: ", txHash);
+        })
 
-    aspect = await instance.on('receipt', (receipt) => {
-        console.log("=============== deployed aspect ===============");
-        console.log("aspect address: " + aspect.options.address);
-        console.log(receipt);
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy aspect tx hash: ", txHash);
-    });
     await new Promise(r => setTimeout(r, 5000));
 
+    console.log("=============== deployed aspect ===============");
+    console.log("aspect address: " + aspect.options.address);
+
     let aspectId=aspect.options.address
+    console.log("--aspect id--: " + aspectId);
     // bind the smart contract with aspect
     await contract.bind({
         priority: 1,

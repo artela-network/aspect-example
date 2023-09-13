@@ -70,7 +70,11 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
 
     onContractBinding(contractAddr: string): bool {
         let value = AspectPropertyProvider.get("binding").asString();
-        return !!value.includes(contractAddr);
+        UtilityProvider.sLog(value+" "+contractAddr)
+        if (value.includes(contractAddr)) {
+            return true;
+        }
+        return false;
     }
 
 
