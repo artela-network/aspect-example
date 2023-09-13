@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: BUSL-1.1
+//
+// Copyright (C) 2023, Berachain Foundation. All rights reserved.
+// Use of this software is govered by the Business Source License included
+// in the LICENSE file of this repository and at www.mariadb.com/bsl11.
+//
+// ANY USE OF THE LICENSED WORK IN VIOLATION OF THIS LICENSE WILL AUTOMATICALLY
+// TERMINATE YOUR RIGHTS UNDER THIS LICENSE FOR THE CURRENT AND ALL OTHER
+// VERSIONS OF THE LICENSED WORK.
+//
+// THIS LICENSE DOES NOT GRANT YOU ANY RIGHT IN ANY TRADEMARK OR LOGO OF
+// LICENSOR OR ITS AFFILIATES (PROVIDED THAT YOU MAY USE A TRADEMARK OR LOGO OF
+// LICENSOR AS EXPRESSLY REQUIRED BY THIS LICENSE).
+//
+// TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON
+// AN “AS IS” BASIS. LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS,
+// EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND
+// TITLE.
+
+syntax = "proto3";
+package polaris.evm.v1alpha1;
+
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "pkg.berachain.dev/polaris/cosmos/x/evm/types";
+
+// Msg defines the x/evm Msg service.
+service MsgService {
+  option (cosmos.msg.v1.service) = true;
+
+  // EthTransaction defines a method submitting Ethereum transactions.
+  rpc EthTransaction(WrappedEthereumTransaction) returns (WrappedEthereumTransactionResult);
+}
+
+// WrappedEthereumTransaction encapsulates an Ethereum transaction as an SDK message.
+message WrappedEthereumTransaction {
+  option (cosmos.msg.v1.signer) = "hacky_fix_cause_cosmos";
+  // data is inner transaction data of the Ethereum transaction
+  bytes data = 1;
+
+  // hacky_fix_cause_cosmos is required until https://github.com/cosmos/cosmos-sdk/issues/16112 is handled.
+  string hacky_fix_cause_cosmos = 2;
+}
+
+// WrappedEthereumTransactionResult defines the Msg/EthereumTx response type.
+message WrappedEthereumTransactionResult {
+  // `gas_used` represents the gas used by the virtual machine execution.
+  uint64 gas_used = 1;
+
+  // `vm_error` contains an error message if the virtual machine execution failed.
+  string vm_error = 2;
+
+  // `return_data` contains the return data of the virtual machine execution.
+  bytes return_data = 3;
+}
