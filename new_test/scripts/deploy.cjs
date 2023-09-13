@@ -21,7 +21,7 @@ const contractABI = JSON.parse(storage);
 const demoContractOptions = {
     data: contractBin,
     gasPrice: 1000000010, // Default gasPrice set by Geth
-    gas: 9000000
+    gas: 4000000
 };
 async function f() {
     // init connection to Artela node
