@@ -24,10 +24,9 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
         ctx.context.set("k2", "v2");
 
         // add hostapi return data
-
         const k1 = ctx.context.get("k1")!.asString();
         const k2 = ctx.context.get("k2")!.asString();
-        return k1 == "v1" && k2 == "v2";
+        return k1 != "v1" && k2 != "v2";
     }
 
     isOwner(sender: string): bool {
@@ -37,23 +36,23 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
 
     onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
 
-        let periodicSchedule = ctx.scheduleManager!.periodic("myPeriodicSchedule")
-            .startAfter(3)
-            .count(1000)
-            .everyNBlocks(5)
-            .maxRetry(2);
-
-        let num = ethereum.Number.fromU64(100);
-        let payload = ethereum.abiEncode('store', [num]);
-        // the scheduled transaction with params.
-
-        let scheduleTo = AspectPropertyProvider.get("ScheduleTo").asString();
-        let broker = AspectPropertyProvider.get("Broker").asString();
-        let tx = new ScheduleTx(scheduleTo).New(
-            payload,
-            new Opts(0, "200000000", "30000", broker))
+        // let periodicSchedule = ctx.scheduleManager!.periodic("myPeriodicSchedule")
+        //     .startAfter(3)
+        //     .count(1000)
+        //     .everyNBlocks(5)
+        //     .maxRetry(2);
+        //
+        // let num = ethereum.Number.fromU64(100);
+        // let payload = ethereum.abiEncode('store', [num]);
+        // // the scheduled transaction with params.
+        //
+        // let scheduleTo = AspectPropertyProvider.get("ScheduleTo").asString();
+        // let broker = AspectPropertyProvider.get("Broker").asString();
+        // let tx = new ScheduleTx(scheduleTo).New(
+        //     payload,
+        //     new Opts(0, "200000000", "30000", broker))
         
-        periodicSchedule.submit(tx);
+     //   periodicSchedule.submit(tx);
         AssertTrue(ctx.blockHeader != null, "onBlockFinalize blockHeader is empty")
         AssertTrue(ctx.scheduleManager != null, "onBlockFinalize scheduleManager is empty")
         AssertTrue(ctx.blockContext != null, "onBlockFinalize blockContext is empty")
@@ -71,10 +70,8 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
     onContractBinding(contractAddr: string): bool {
         let value = AspectPropertyProvider.get("binding").asString();
         UtilityProvider.sLog(value+" "+contractAddr)
-        if (value.includes(contractAddr)) {
-            return true;
-        }
-        return false;
+        return !!value.includes(contractAddr);
+
     }
 
 
