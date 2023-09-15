@@ -138,25 +138,26 @@ async function f() {
         gasPrice: 1000000010, // Default gasPrice set by Geth
         gas: 4000000
     });
-    let instance = aspect.deploy({
+
+
+    let instance = await aspect.deploy({
         data: '0x' + aspectCode,
         properties: [{ 'key': 'HoneyPotAddr', 'value': honeypotAddress }, {
             'key': 'binding',
             'value': honeypotAddress
-        }, { 'key': 'owner', 'value': AspectDeployer }]
-    }).send({ from: AspectDeployer, nonce: nonceValAspectDeployer });
+        }, { 'key': 'owner', 'value': AspectDeployer }],
+        paymaster: AspectDeployer,
+        proof: '0x0',
+    }).send({ from: AspectDeployer, nonce: nonceValAspectDeployer})
+        .on('receipt', (receipt) => {
+            console.log(receipt);
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy aspect tx hash: ", txHash);
+        })
 
-    let aspectRt = await instance.on('receipt', (receipt) => {
-        console.log("=============== deployed aspect ===============");
-        console.log("aspect address: " + aspect.options.address);
-        console.log(receipt);
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy aspect tx hash: ", txHash);
-    });
     await new Promise(r => setTimeout(r, 5000));
-
-    let aspectId = aspectRt.options.address
-
+    let aspectId = instance.options.address
+    console.log(" aspect id : ", aspectId," honeyPotContract :",honeypotAddress);
     // Step6: bind honeyPotContract with the GuardAspect aspect
     //
     // Bind the HoneyPot asset management contract, deployed in Step1 (the contract being attacked),

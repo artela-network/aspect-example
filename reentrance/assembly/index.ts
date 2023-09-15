@@ -1,15 +1,14 @@
 // The entry file of your WebAssembly module.
 
-import { Entry } from "@artela/aspect-libs/entry";
+import { Entry } from "@artela/aspect-libs";
 
 //import Aspect from "./aspect/guard_by_trace_aspect"
 //import Aspect from "./aspect/guard_by_count_aspect"
-import Aspect from "./aspect/guard_by_lock_aspect"
-
-import { utils } from "@artela/aspect-libs/common";
+import Aspect from "./aspect/guard_by_count"
+import {UtilityProvider} from "../../../aspect-tooling/packages/libs";
 
 const firstAspect = new Aspect();
-const entry = new Entry(firstAspect, firstAspect);
+const entry = new Entry(firstAspect, firstAspect,null);
 
 
 export function execute(methodPtr: i32, argPtr: i32): i32 {
@@ -25,5 +24,5 @@ export function isTransactionLevel(): i32 {
 }
 
 export function allocate(size: i32): i32 {
-  return utils.alloc(size);
+  return UtilityProvider.alloc(size);
 }

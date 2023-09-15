@@ -99,21 +99,22 @@ async function f() {
         gasPrice: 1000000010, // Default gasPrice set by Geth
         gas: 4000000
     });
-    let instance = aspect.deploy({
-        data: '0x' + aspectCode,
-        properties: [{ 'key': 'TargetAddr', 'value': targetAccount }, { 'key': 'ScheduleTo', 'value': brokerAddress }, { 'key': 'Broker', 'value': brokerDeployer }, { 'key': 'binding', 'value': brokerAddress }, { 'key': 'owner', 'value': AspectDeployer }]
-    }).send({ from: AspectDeployer, nonce: nonceValAspectDeployer });
 
-    let aspectRt = await instance.on('receipt', (receipt) => {
-        console.log("=============== deployed aspect ===============");
-        console.log("aspect address: " + aspect.options.address);
-        console.log(receipt);
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy aspect tx hash: ", txHash);
-    });
+    aspect = await aspect.deploy({
+        data: '0x' + aspectCode,
+        properties: [{ 'key': 'TargetAddr', 'value': targetAccount }, { 'key': 'ScheduleTo', 'value': brokerAddress }, { 'key': 'Broker', 'value': brokerDeployer }, { 'key': 'binding', 'value': brokerAddress }, { 'key': 'owner', 'value': AspectDeployer }],
+        paymaster: AspectDeployer,
+        proof: '0x0',
+    }).send({ from: AspectDeployer, nonce: nonceValAspectDeployer})
+        .on('receipt', (receipt) => {
+            console.log(receipt);
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy aspect tx hash: ", txHash);
+        })
+
     await new Promise(r => setTimeout(r, 5000));
 
-    let aspectId = aspectRt.options.address
+    let aspectId = aspect.options.address
 
     // Step 4. Bind the accountant contract with aspect.
     await broker_contract.bind({
