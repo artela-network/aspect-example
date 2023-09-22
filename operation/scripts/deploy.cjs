@@ -5,28 +5,19 @@
 const Web3 = require('@artela/web3');
 const fs = require("fs");
 
-const scheduleTargetBin = fs.readFileSync('./build/contract/ScheduleTarget.bin', "utf-8");
-const ScheduleTarget = fs.readFileSync('./build/contract/ScheduleTarget.abi', "utf-8")
-const ScheduleTargetAbi = JSON.parse(ScheduleTarget);
-const ScheduleTargetOptions = {
-    data: scheduleTargetBin,
-    gasPrice: 1000000010, // Default gasPrice set by Geth
-    gas: 4000000
-};
-
 const contractBin = fs.readFileSync('./build/contract/Storage.bin', "utf-8");
 const storage = fs.readFileSync('./build/contract/Storage.abi', "utf-8")
 const contractABI = JSON.parse(storage);
 
 const demoContractOptions = {
-    data: contractBin,
-    gasPrice: 1000000010, // Default gasPrice set by Geth
-    gas: 9000000
+    data: contractBin
 };
 
 async function f() {
     // init connection to Artela node
     const web3 = new Web3('http://127.0.0.1:8545');
+
+    let gasPrice = await web3.atl.getGasPrice();
 
     // retrieve accounts
     let accounts = await web3.atl.getAccounts();
@@ -34,39 +25,23 @@ async function f() {
     // retrieve current nonce
     let nonceVal = await web3.atl.getTransactionCount(accounts[0]);
 
-    // instantiate an instance of demo contract
-    let schedule_contract = new web3.atl.Contract(ScheduleTargetAbi,
-        web3.utils.aspectCoreAddr, ScheduleTargetOptions);
-    // deploy demo contract
-    let schedule_instance = schedule_contract.deploy().send({from: accounts[0], nonce: nonceVal});
-    let contractAddress = "";
-    schedule_contract = await schedule_instance.on('receipt', function (receipt) {
-        console.log("=============== deployed contract ===============");
-        console.log("contract address: " + receipt.contractAddress);
-        console.log(receipt);
-        contractAddress = receipt.contractAddress
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy contract tx hash: ", txHash);
-    });
-
-    console.log("== ScheduleTo ==", contractAddress)
-    console.log("== account ==", accounts[0])
-
-    await new Promise(r => setTimeout(r, 5000));
-    // instantiate an instance of demo contract
-    let contract = new web3.atl.Contract(contractABI,
-        web3.utils.aspectCoreAddr, demoContractOptions);
-    // deploy demo contract
-    let instance = contract.deploy().send({from: accounts[0], nonce: nonceVal + 1});
     let contractAddr = ""
-    contract = await instance.on('receipt', function (receipt) {
-        console.log("=============== deployed contract ===============");
-        console.log("contract address: " + receipt.contractAddress);
-        contractAddr = receipt.contractAddress
-        console.log(receipt);
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy contract tx hash: ", txHash);
-    });
+    // instantiate an instance of demo contract
+    let contract = new web3.atl.Contract(contractABI);
+    // deploy demo contract
+    let instance =await contract.deploy(demoContractOptions).send({
+            from: accounts[0],
+            nonce: nonceVal ,
+            gasPrice,
+            gas: 9000000
+        }).on('receipt', function (receipt) {
+            console.log("=============== deployed contract ===============");
+            console.log("contract address: " + receipt.contractAddress);
+            contractAddr = receipt.contractAddress
+            console.log(receipt);
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy contract tx hash: ", txHash);
+        });
 
 
     // load aspect code and deploy
@@ -74,17 +49,16 @@ async function f() {
         encoding: "hex"
     });
     // instantiate an instance of aspect
-    let aspect = new web3.atl.Aspect(
-        web3.utils.aspectCoreAddr, demoContractOptions);
+    let aspect = new web3.atl.Aspect();
     let aspectInstance = await aspect.deploy({
         data: '0x' + aspectCode,
-        properties: [{'key': 'ScheduleTo', 'value': contractAddress}, {
+        properties: [ {
             'key': 'Broker',
             'value': accounts[0]
         }, {'key': 'binding', 'value': contractAddr}, {'key': 'owner', 'value': accounts[0]}],
         paymaster: accounts[0],
         proof: '0x0',
-    }).send({from: accounts[0], nonce: nonceVal + 2})
+    }).send({from: accounts[0], nonce: nonceVal + 1, gasPrice, gas: 4000000})
         .on('receipt', (receipt) => {
             console.log(receipt);
         }).on('transactionHash', (txHash) => {
@@ -99,11 +73,11 @@ async function f() {
     let aspectId = aspectInstance.options.address
     console.log("--aspect id--: " + aspectId);
     // bind the smart contract with aspect
-    await contract.bind({
+    await instance.bind({
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({from: accounts[0], nonce: nonceVal + 3})
+    }).send({from: accounts[0], nonce: nonceVal + 2, gasPrice, gas: 4000000})
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
@@ -115,8 +89,8 @@ async function f() {
     await new Promise(r => setTimeout(r, 5000));
 
     // call the smart contract, aspect should be triggered
-    await contract.methods.store(100)
-        .send({from: accounts[0], nonce: nonceVal + 4})
+    await instance.methods.store(100)
+        .send({from: accounts[0], nonce: nonceVal + 3, gasPrice, gas: 4000000})
         .on('receipt', (receipt) => {
             console.log("=============== called store ===============")
             console.log(receipt);
@@ -125,22 +99,18 @@ async function f() {
             console.log("call contract tx hash: ", txHash);
         });
 
-    let result = await contract.methods.retrieve().call({from: accounts[0], nonce: nonceVal + 5})
+    let result = await instance.methods.retrieve().call()
     console.log("==== reuslt===" + result);
 
 
-
     let rawcall = await aspectInstance.rawcall('0x1167c2e50dFE34b9Ad593d2c6694731097147317')
-        .send({from: accounts[0], nonce: nonceVal + 5})
+        .send({from: accounts[0], nonce: nonceVal + 4, gasPrice, gas: 4000000})
         .on('receipt', (receipt) => {
             console.log(receipt);
             console.log(receipt.ret);
-
         }).on('transactionHash', (txHash) => {
-            console.log("deploy aspect tx hash: ", txHash);
+            console.log("rawcall  tx hash: ", txHash);
         })
-    console.log( rawcall);
-
 
 }
 

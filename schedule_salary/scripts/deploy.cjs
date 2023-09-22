@@ -12,19 +12,13 @@ const tokenTarget = fs.readFileSync('./build/contract/contracts_token_sol_ArtTok
 const tokenAbi = JSON.parse(tokenTarget);
 const tokenOptions = {
     data: tokenBin,
-    gasPrice: 1000000010, // Default gasPrice set by Geth
-    gas: 4000000
+    arguments: [1000000000000000],
+
 };
 
 const brokerBin = fs.readFileSync('./build/contract/contracts_broker_sol_Borker.bin', "utf-8");
 const brokerTarget = fs.readFileSync('./build/contract/contracts_broker_sol_Borker.abi', "utf-8")
 const brokerAbi = JSON.parse(brokerTarget);
-const brokerOptions = {
-    data: brokerBin,
-    gasPrice: 1000000010, // Default gasPrice set by Geth
-    gas: 3000000
-};
-
 
 
 async function f() {
@@ -39,26 +33,29 @@ async function f() {
     let targetAccount = accounts[3]
     console.log("===targetAccount===", targetAccount)
     let nonceValtokenDeployer = await web3.atl.getTransactionCount(tokenDeployer);
-
+    let gasPrice = await web3.atl.getGasPrice();
 
     // Step 1. Deploy an erc20 contract "token" to define the asset.
     //
     // contract at: schedule_salary/contracts/token.sol
-    let token_contract = new web3.atl.Contract(tokenAbi,
-        web3.utils.aspectCoreAddr, tokenOptions);
-    let token_instance = token_contract.deploy({ "arguments": [1000000000000000] }).send({ from: tokenDeployer, nonce: nonceValtokenDeployer });
+    let token_contract = new web3.atl.Contract(tokenAbi);
     let contractAddress = "";
-    token_contract = await token_instance.on('receipt', function (receipt) {
-        console.log("=============== deployed contract ===============");
-        console.log("contract address: " + receipt.contractAddress);
-        console.log(receipt);
-        contractAddress = receipt.contractAddress
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy contract tx hash: ", txHash);
-    });
+    let token_instance = await token_contract.deploy(tokenOptions)
+        .send({
+            from: tokenDeployer,
+            nonce: nonceValtokenDeployer,
+            gasPrice,
+            gas: 4000000
+        }).on('receipt', function (receipt) {
+            console.log("=============== deployed contract ===============");
+            console.log("contract address: " + receipt.contractAddress);
+            console.log(receipt);
+            contractAddress = receipt.contractAddress
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy contract tx hash: ", txHash);
+        });
     console.log("== token_address ==", contractAddress)
     console.log("== token_account ==", tokenDeployer)
-
 
 
     // Step 2. Deploy an erc20 contract "broker" as payroll accountant.
@@ -66,23 +63,30 @@ async function f() {
     // contrat at: schedule_salary/contracts/broker.sol
     let brokerDeployer = accounts[1]
     let nonceValBrokerDeployer = await web3.atl.getTransactionCount(brokerDeployer);
+    const brokerOptions = {
+        data: brokerBin,
+        arguments: [contractAddress],
 
-    let broker_contract = new web3.atl.Contract(brokerAbi,
-        web3.utils.aspectCoreAddr, brokerOptions);
-    let broker_instance = broker_contract.deploy({ "arguments": [contractAddress] }).send({ from: brokerDeployer, nonce: nonceValBrokerDeployer });
+    };
     let brokerAddress = "";
-    broker_contract = await broker_instance.on('receipt', function (receipt) {
-        console.log("=============== deployed contract ===============");
-        console.log("contract address: " + receipt.contractAddress);
-        console.log(receipt);
-        brokerAddress = receipt.contractAddress
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy contract tx hash: ", txHash);
-    });
+    let broker_contract = new web3.atl.Contract(brokerAbi);
+    let broker_instance = await broker_contract.deploy(brokerOptions)
+        .send({
+            from: brokerDeployer,
+            nonce: nonceValBrokerDeployer,
+            gasPrice,
+            gas: 3000000
+        }).on('receipt', function (receipt) {
+            console.log("=============== deployed contract ===============");
+            console.log("contract address: " + receipt.contractAddress);
+            console.log(receipt);
+            brokerAddress = receipt.contractAddress
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy contract tx hash: ", txHash);
+        });
 
     console.log("== broker_contract ==", brokerAddress)
     console.log("== broker_account ==", brokerDeployer)
-
 
 
     let AspectDeployer = accounts[2]
@@ -94,18 +98,21 @@ async function f() {
     let aspectCode = fs.readFileSync('./build/release.wasm', {
         encoding: "hex"
     });
-    let aspect = new web3.atl.Aspect(
-        web3.utils.aspectCoreAddr, {
-        gasPrice: 1000000010, // Default gasPrice set by Geth
-        gas: 4000000
-    });
+    let aspect = new web3.atl.Aspect();
 
-    aspect = await aspect.deploy({
+    let aspectInstance = await aspect.deploy({
         data: '0x' + aspectCode,
-        properties: [{ 'key': 'TargetAddr', 'value': targetAccount }, { 'key': 'ScheduleTo', 'value': brokerAddress }, { 'key': 'Broker', 'value': brokerDeployer }, { 'key': 'binding', 'value': brokerAddress }, { 'key': 'owner', 'value': AspectDeployer }],
+        properties: [{'key': 'TargetAddr', 'value': targetAccount}, {
+            'key': 'ScheduleTo',
+            'value': brokerAddress
+        }, {'key': 'Broker', 'value': brokerDeployer}, {'key': 'binding', 'value': brokerAddress}, {
+            'key': 'owner',
+            'value': AspectDeployer
+        }],
         paymaster: AspectDeployer,
         proof: '0x0',
-    }).send({ from: AspectDeployer, nonce: nonceValAspectDeployer})
+    }).send({from: AspectDeployer, nonce: nonceValAspectDeployer,      gasPrice,
+        gas: 4000000,})
         .on('receipt', (receipt) => {
             console.log(receipt);
         }).on('transactionHash', (txHash) => {
@@ -114,14 +121,14 @@ async function f() {
 
     await new Promise(r => setTimeout(r, 5000));
 
-    let aspectId = aspect.options.address
+    let aspectId = aspectInstance.options.address
 
     // Step 4. Bind the accountant contract with aspect.
-    await broker_contract.bind({
+    await broker_instance.bind({
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({ from: brokerDeployer, nonce: nonceValBrokerDeployer + 1 })
+    }).send({from: brokerDeployer, nonce: nonceValBrokerDeployer + 1})
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
@@ -133,8 +140,13 @@ async function f() {
     await new Promise(r => setTimeout(r, 5000));
 
     // Step 5. Transfer money to accountant, which is same to deposit to the accountant address. 
-    await token_contract.methods.transfer(brokerAddress, 10000000)
-        .send({ from: tokenDeployer, nonce: nonceValtokenDeployer + 1 })
+    await token_instance.methods.transfer(brokerAddress, 10000000)
+        .send({
+            from: tokenDeployer,
+            nonce: nonceValtokenDeployer + 1,
+            gas: 2500000,
+            gasPrice
+        })
         .on('receipt', (receipt) => {
             console.log("=============== called aspect bound contract ===============")
             console.log(receipt);
@@ -143,12 +155,17 @@ async function f() {
             console.log("called aspect bound contract tx hash: ", txHash);
         });
 
-    let result = await token_contract.methods.balanceOf(brokerAddress).call({ from: tokenDeployer, nonce: nonceValtokenDeployer + 2 })
+    let result = await token_instance.methods.balanceOf(brokerAddress).call()
     console.log("==== brokerDeployer  balance===" + result);
 
     // Step 6. Call the contract method to start schdule salary pament transation.
-    await broker_contract.methods.startSchedule()
-        .send({ from: brokerDeployer, nonce: nonceValBrokerDeployer + 2 })
+    await broker_instance.methods.startSchedule()
+        .send({
+            from: brokerDeployer,
+            nonce: nonceValBrokerDeployer + 2,
+            gas: 2500000,
+            gasPrice
+        })
         .on('receipt', (receipt) => {
             console.log("=============== called startSchedule===============")
             console.log(receipt);
@@ -165,7 +182,7 @@ async function f() {
     let nonceskip = 3;
     for (; ;) {
         await new Promise(r => setTimeout(r, 5000));
-        let result = await token_contract.methods.balanceOf(targetAccount).call({ from: tokenDeployer, nonce: nonceValtokenDeployer + nonceskip })
+        let result = await token_instance.methods.balanceOf(targetAccount).call()
         console.log("==== targetAccount  balanceOf===" + result);
         ++nonceskip
     }

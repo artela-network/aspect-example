@@ -10,12 +10,10 @@ import {
     PostTxExecuteCtx,
     PreContractCallCtx,
     PreTxExecuteCtx,
-    OperationCtx,
-    StringData,
-    AspectPropertyProvider,
-    AspectStateProvider,
-    UtilityProvider,
+    OperationCtx
 } from "@artela/aspect-libs";
+import {AspectPropertyProvider, AspectStateProvider, UtilityProvider} from "@artela/aspect-libs/system";
+import { StringData} from "@artela/aspect-libs";
 import {Protobuf} from "as-proto/assembly";
 
 export class StoreAspect implements IAspectTransaction, IAspectBlock, IAspectOperation {

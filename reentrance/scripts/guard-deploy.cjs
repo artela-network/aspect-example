@@ -12,19 +12,13 @@ const fs = require("fs");
 const attackBin = fs.readFileSync('./build/contract/Attack.bin', "utf-8");
 const attackTarget = fs.readFileSync('./build/contract/Attack.abi', "utf-8")
 const attackAbi = JSON.parse(attackTarget);
-const attackOptions = {
-    data: attackBin,
-    gasPrice: 1000000010, // Default gasPrice set by Geth
-    gas: 4000000
-};
+
 
 const HoneyPotBin = fs.readFileSync('./build/contract/HoneyPot.bin', "utf-8");
 const HoneyPotTarget = fs.readFileSync('./build/contract/HoneyPot.abi', "utf-8")
 const HoneyPotAbi = JSON.parse(HoneyPotTarget);
 const honeypotOptions = {
     data: HoneyPotBin,
-    gasPrice: 1000000010, // Default gasPrice set by Geth
-    gas: 3000000
 };
 
 
@@ -32,7 +26,7 @@ async function f() {
     // init connection to Artela node
 
     const web3 = new Web3('http://127.0.0.1:8545');
-
+    let gasPrice = await web3.atl.getGasPrice();
     // retrieve accounts
     let accounts = await web3.atl.getAccounts();
 
@@ -47,18 +41,22 @@ async function f() {
     // The total recorded amount of these assets is mapped to the native assets held in the contract's account on the blockchain.
     //
     // Contract at: reentrance/contracts/HoneyPot.sol
-    let honeyPotContract = new web3.atl.Contract(HoneyPotAbi,
-        web3.utils.aspectCoreAddr, honeypotOptions);
-    let token_instance = honeyPotContract.deploy().send({ from: honeypotDeployer, nonce: honeyPotNonceVal });
+    let honeyPotContract = new web3.atl.Contract(HoneyPotAbi);
     let honeypotAddress = "";
-    honeyPotContract = await token_instance.on('receipt', function (receipt) {
-        console.log("=============== deployed contract ===============");
-        console.log("contract address: " + receipt.contractAddress);
-        console.log(receipt);
-        honeypotAddress = receipt.contractAddress
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy contract tx hash: ", txHash);
-    });
+    let honeyPot_instance = await honeyPotContract.deploy(honeypotOptions)
+        .send({
+            from: honeypotDeployer,
+            nonce: honeyPotNonceVal,
+            gasPrice,
+            gas: 3000000
+        }).on('receipt', function (receipt) {
+            console.log("=============== deployed contract ===============");
+            console.log("contract address: " + receipt.contractAddress);
+            console.log(receipt);
+            honeypotAddress = receipt.contractAddress
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy contract tx hash: ", txHash);
+        });
     console.log("== HoneyPot_address ==", honeypotAddress)
     console.log("== HoneyPot_account ==", honeypotDeployer)
 
@@ -71,22 +69,28 @@ async function f() {
     // Contract at: reentrance/contracts/Attack.sol
     let attackDeployer = accounts[1]
     let attackNonceVal = await web3.atl.getTransactionCount(attackDeployer);
+    const attackOptions = {
+        data: attackBin,
+        arguments: [honeypotAddress],
 
+    };
+    let attackAddress = "";
     let attackContract = new web3.atl.Contract(attackAbi,
         web3.utils.aspectCoreAddr, attackOptions);
-    let attack_instance = attackContract.deploy({ "arguments": [honeypotAddress] }).send({
-        from: attackDeployer,
-        nonce: attackNonceVal
-    });
-    let attackAddress = "";
-    attackContract = await attack_instance.on('receipt', function (receipt) {
-        console.log("=============== deployed attack contract ===============");
-        console.log("contract attack address: " + receipt.contractAddress);
-        console.log(receipt);
-        attackAddress = receipt.contractAddress
-    }).on('transactionHash', (txHash) => {
-        console.log("deploy attack contract tx hash: ", txHash);
-    });
+    let attack_instance = await attackContract.deploy(attackOptions)
+        .send({
+            from: attackDeployer,
+            nonce: attackNonceVal,
+            gasPrice,
+            gas: 4000000
+        }).on('receipt', function (receipt) {
+            console.log("=============== deployed attack contract ===============");
+            console.log("contract attack address: " + receipt.contractAddress);
+            console.log(receipt);
+            attackAddress = receipt.contractAddress
+        }).on('transactionHash', (txHash) => {
+            console.log("deploy attack contract tx hash: ", txHash);
+        });
 
     console.log("== attack_contract ==", attackAddress)
     console.log("== attack_account ==", attackDeployer)
@@ -94,8 +98,14 @@ async function f() {
     // Step3: admin deposit 100 eth to honeypot
     //
     // The current recorded balance of HoneyPot is 100 ETH, and the on-chain balance of HoneyPot contract is also 100 ETH.
-    await honeyPotContract.methods.deposit()
-        .send({ from: honeypotDeployer, nonce: honeyPotNonceVal + 1, value: web3.utils.toWei('100', 'ether') })
+    await honeyPot_instance.methods.deposit()
+        .send({
+            from: honeypotDeployer,
+            nonce: honeyPotNonceVal + 1,
+            value: web3.utils.toWei('100', 'ether'),
+            gasPrice,
+            gas: 4000000,
+        })
         .on('receipt', (receipt) => {
             console.log("=============== Admin Deposit 100 ether ===============")
             console.log(receipt);
@@ -109,8 +119,14 @@ async function f() {
     //
     // The recorded balance of HoneyPot has now increased to 110 ETH,
     // and the on-chain balance of HonePot contract has also increased to 110 ETH.
-    await attackContract.methods.deposit()
-        .send({ from: accounts[1], nonce: attackNonceVal + 1, value: web3.utils.toWei('10', 'ether') })
+    await attack_instance.methods.deposit()
+        .send({
+            from: accounts[1],
+            nonce: attackNonceVal + 1,
+            value: web3.utils.toWei('10', 'ether'),
+            gasPrice,
+            gas: 4000000,
+        })
         .on('receipt', (receipt) => {
             console.log("=============== Hacker Deposit 1 ether ===============")
             console.log(receipt);
@@ -133,40 +149,44 @@ async function f() {
     let aspectCode = fs.readFileSync('./build/release.wasm', {
         encoding: "hex"
     });
-    let aspect = new web3.atl.Aspect(
-        web3.utils.aspectCoreAddr, {
-        gasPrice: 1000000010, // Default gasPrice set by Geth
-        gas: 4000000
-    });
+    let aspect = new web3.atl.Aspect();
 
-
-    let instance = await aspect.deploy({
+    let aspect_instance = await aspect.deploy({
         data: '0x' + aspectCode,
-        properties: [{ 'key': 'HoneyPotAddr', 'value': honeypotAddress }, {
+        properties: [{'key': 'HoneyPotAddr', 'value': honeypotAddress}, {
             'key': 'binding',
             'value': honeypotAddress
-        }, { 'key': 'owner', 'value': AspectDeployer }],
+        }, {'key': 'owner', 'value': AspectDeployer}],
         paymaster: AspectDeployer,
         proof: '0x0',
-    }).send({ from: AspectDeployer, nonce: nonceValAspectDeployer})
-        .on('receipt', (receipt) => {
-            console.log(receipt);
-        }).on('transactionHash', (txHash) => {
-            console.log("deploy aspect tx hash: ", txHash);
-        })
+    }).send({
+        from: AspectDeployer,
+        nonce: nonceValAspectDeployer,
+        gasPrice,
+        gas: 4000000,
+    }).on('receipt', (receipt) => {
+        console.log(receipt);
+    }).on('transactionHash', (txHash) => {
+        console.log("deploy aspect tx hash: ", txHash);
+    })
 
     await new Promise(r => setTimeout(r, 5000));
-    let aspectId = instance.options.address
-    console.log(" aspect id : ", aspectId," honeyPotContract :",honeypotAddress);
+    let aspectId = aspect_instance.options.address
+    console.log(" aspect id : ", aspectId, " honeyPotContract :", honeypotAddress);
     // Step6: bind honeyPotContract with the GuardAspect aspect
     //
     // Bind the HoneyPot asset management contract, deployed in Step1 (the contract being attacked),
     // to the security check contract deployed in Step5 on the blockchain.
-    await honeyPotContract.bind({
+    await honeyPot_instance.bind({
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({ from: honeypotDeployer, nonce: honeyPotNonceVal + 2 })
+    }).send({
+        from: honeypotDeployer,
+        nonce: honeyPotNonceVal + 2,
+        gasPrice,
+        gas: 4000000,
+    })
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
@@ -183,8 +203,13 @@ async function f() {
     // Utilizing the code from the HoneyPot contract,
     // an attempt is made to bypass the balance restriction and perform a withdrawal activity.
     try {
-        await attackContract.methods.attack()
-            .send({ from: accounts[1], nonce: attackNonceVal + 2 })
+        await attack_instance.methods.attack()
+            .send({
+                from: accounts[1],
+                nonce: attackNonceVal + 2,
+                gasPrice,
+                gas: 4000000,
+            })
             .on('receipt', (receipt) => {
                 console.log("=============== Hacker Withdraw 10 ether ===============")
                 console.log(receipt);
