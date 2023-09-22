@@ -1,0 +1,11 @@
+import assert from "assert";
+import {ContextQueryRequest, DataSpaceType} from "@artela/aspect-libs/proto";
+import {Protobuf} from "as-proto/assembly";
+assert.strictEqual(add(1, 2), 3);
+console.log("ok");
+const array = new Array<string>(1);
+array.push("k1");
+const contextQueryRequest = new ContextQueryRequest(DataSpaceType.TX_ASPECT_CONTEXT,array);
+const encoded = Protobuf.encode(contextQueryRequest, ContextQueryRequest.encode);
+console.log("ok");
+console.log(encoded);

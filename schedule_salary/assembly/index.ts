@@ -1,7 +1,6 @@
 // The entry file of your WebAssembly module.
 
-
-import Aspect from "./aspect/salary_pay "
+import Aspect from "./aspect/salary_pay"
 import {Entry, UtilityProvider} from "@artela/aspect-libs";
 
 let salaryPayment = new Aspect();

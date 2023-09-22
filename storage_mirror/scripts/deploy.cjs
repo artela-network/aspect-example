@@ -31,7 +31,8 @@ async function f() {
         .send({
             from: accounts[0],
             nonce: nonce++,
-            gas: await aaWalletFactoryContract.deploy(deployOption).estimateGas({from: accounts[0]}),
+          //  gas: await aaWalletFactoryContract.deploy(deployOption).estimateGas({from: accounts[0]}),
+            gas: 10000000,
             gasPrice
         }).on('transactionHash', (txHash) => {
             console.log('aa wallet factory deploy tx: ', txHash);

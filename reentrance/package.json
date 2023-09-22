@@ -19,17 +19,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@artela/aspect-libs": "^0.0.11",
-    "@artela/web3": "^1.9.2",
-    "@artela/web3-atl-aspect": "^1.9.2",
-    "@artela/web3-eth-contract": "^1.9.2",
-    "@artela/web3-utils": "^1.9.1",
+
+    "@artela/aspect-libs": "^0.0.19",
+    "@artela/web3": "^1.9.8",
+    "@artela/web3-atl-aspect": "^1.9.8",
+    "@artela/web3-eth-contract": "^1.9.8",
+    "@artela/web3-utils": "^1.9.8",
     "@assemblyscript/loader": "^0.27.5",
     "@openzeppelin/contracts": "^4.9.2",
     "as-proto": "^1.3.0"
   },
   "devDependencies": {
-    "@artela/aspect-tool": "^0.0.16",
+    "@artela/aspect-tool": "^0.0.33",
     "as-proto-gen": "^1.3.0",
     "assemblyscript": "^0.27.5"
   },

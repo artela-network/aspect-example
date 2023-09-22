@@ -4,9 +4,18 @@ import {
     IAspectBlock,
     IAspectTransaction,
     OnBlockFinalizeCtx,
-    OnBlockInitializeCtx, PostContractCallCtx, PostTxCommitCtx, PostTxExecuteCtx, PreContractCallCtx, PreTxExecuteCtx
-} from "@artela/aspect-libs/types";
-import {AspectPropertyProvider, ethereum, EthTransaction, Opts, ScheduleTx} from "@artela/aspect-libs";
+    OnBlockInitializeCtx,
+    PostContractCallCtx,
+    PostTxCommitCtx,
+    PostTxExecuteCtx,
+    PreContractCallCtx,
+    PreTxExecuteCtx,
+    AspectPropertyProvider,
+    ethereum,
+    EthTransaction,
+    Opts,
+    ScheduleTx
+} from "@artela/aspect-libs";
 
 class SalaryPayment implements IAspectTransaction, IAspectBlock {
 
@@ -15,7 +24,7 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
     }
 
     isOwner(sender: string): bool {
-        let value = AspectPropertyProvider.get("owner").asString();
+        let value = AspectPropertyProvider.get("owner")!.asString();
         return !!value.includes(sender);
     }
 
@@ -29,20 +38,20 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
         // everyNBlocks(5): execution at every 5th block since started.
         // maxRetry(2): Transaction confirmation on the blockchain is not guaranteed but rather determined by the gas fee.
         // If a transaction fails to be confirmed on the blockchain, it can be retried up to a maximum of two times.
-        const periodicSch = ctx.scheduleManager.periodic("myPeriodicSchedule")
+        const periodicSch = ctx.schedule.periodic("myPeriodicSchedule")
             .startAfter(3)
             .count(1000)
             .everyNBlocks(5)
             .maxRetry(2);
-       const tx= this.scheduleTx(AspectPropertyProvider.get("ScheduleTo").asString(),
-            AspectPropertyProvider.get("Broker").asString(),
-            AspectPropertyProvider.get("TargetAddr").asString());
+        const tx = this.scheduleTx(AspectPropertyProvider.get("ScheduleTo")!.asString(),
+            AspectPropertyProvider.get("Broker")!.asString(),
+            AspectPropertyProvider.get("TargetAddr")!.asString());
         periodicSch.submit(tx);
 
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = AspectPropertyProvider.get("binding").asString();
+        let value = AspectPropertyProvider.get("binding")!.asString();
         return !!value.includes(contractAddr);
     }
 

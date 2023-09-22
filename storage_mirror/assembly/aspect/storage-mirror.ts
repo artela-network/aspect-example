@@ -8,10 +8,12 @@ import {
     PostTxCommitCtx,
     PostTxExecuteCtx,
     PreContractCallCtx,
-    PreTxExecuteCtx
-} from "@artela/aspect-libs/types";
-import {AspectPropertyProvider, JustInTimeCaller, UtilityProvider} from "@artela/aspect-libs/system";
-import {ethereum, JitInherentRequest} from "@artela/aspect-libs";
+    PreTxExecuteCtx,
+    AspectPropertyProvider,
+    JustInTimeCaller,
+    UtilityProvider,
+    ethereum, JitInherentRequest
+} from "@artela/aspect-libs";
 
 export class StorageMirror implements IAspectTransaction, IAspectBlock {
     filterTx(ctx: FilterTxCtx): bool {
@@ -19,7 +21,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
     }
 
     isOwner(sender: string): bool {
-        let value = AspectPropertyProvider.get("owner").asString();
+        let value = AspectPropertyProvider.get("owner")!.asString();
         return value.includes(sender);
     }
 
@@ -36,13 +38,21 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
     }
 
     preTxExecute(ctx: PreTxExecuteCtx): void {
+
+    }
+
+    preContractCall(ctx: PreContractCallCtx): void {
+
+    }
+
+    postContractCall(ctx: PostContractCallCtx): void {
         let txData = UtilityProvider.uint8ArrayToHex(ctx.tx!.input);
         // calling store method
         if (txData.startsWith('6057361d')) {
             // then we try to mirror the call to another storage contract
-            let walletAddress = AspectPropertyProvider.get("wallet").asString();
+            let walletAddress = AspectPropertyProvider.get("wallet")!.asString();
             UtilityProvider.sLog("🐸🐸 wallet: " + walletAddress + "        ");
-            let contractAddress = AspectPropertyProvider.get("contract").asString();
+            let contractAddress = AspectPropertyProvider.get("contract")!.asString();
             UtilityProvider.sLog("🐸🐸 contract: " + contractAddress + "        ");
             const calldata = ethereum.abiEncode('execute', [
                 ethereum.Address.fromHexString(contractAddress),
@@ -65,14 +75,9 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
 
             const jitCaller = new JustInTimeCaller();
             let response = jitCaller.jitCall(request);
+            UtilityProvider.sLog("---1--" + response!.success.toString() + " " + response!.errorMsg)
             AssertTrue(!!response!.success, 'failed to call JIT');
         }
-    }
-
-    preContractCall(ctx: PreContractCallCtx): void {
-    }
-
-    postContractCall(ctx: PostContractCallCtx): void {
     }
 
     postTxExecute(ctx: PostTxExecuteCtx): void {

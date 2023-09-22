@@ -176,8 +176,7 @@ async function f() {
         });
 
     // wait for block committing
-    await new Promise(r => setTimeout(r, 5000));
-
+    await new Promise(r => setTimeout(r, 1000));
     // Step7. call "Attach" contract method "attack"
     //
     // The logic within the attach function will be triggered.
@@ -191,7 +190,7 @@ async function f() {
                 console.log(receipt);
             })
             .on('transactionHash', (txHash) => {
-                console.log("Call contract tx hash: ", txHash);
+                console.log("attack contract tx hash: ", txHash);
             });
     } catch (err) {
         console.log(err);
