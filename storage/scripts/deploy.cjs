@@ -136,6 +136,10 @@ async function f() {
     let result = await instance.methods.retrieve().call()
     console.log("==== reuslt===" + result);
 
+    let value = await instance.methods.getAspectContext(aspectId, "k2").call()
+    console.log("==== getAspectContext===" + value);
+
+
     let nonceskip = 6;
     for (; ;) {
         await new Promise(r => setTimeout(r, 5000));

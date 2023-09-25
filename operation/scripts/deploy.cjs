@@ -107,10 +107,11 @@ async function f() {
         .send({from: accounts[0], nonce: nonceVal + 4, gasPrice, gas: 4000000})
         .on('receipt', (receipt) => {
             console.log(receipt);
-            console.log(receipt.ret);
+            console.log(receipt);
         }).on('transactionHash', (txHash) => {
             console.log("rawcall  tx hash: ", txHash);
         })
+    console.log(rawcall)
 
 }
 
