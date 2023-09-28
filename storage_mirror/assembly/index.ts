@@ -1,7 +1,6 @@
 // The entry file of your WebAssembly module.
 import {StorageMirror} from "./aspect/storage-mirror"
-import {Entry} from "@artela/aspect-libs/types";
-import {UtilityProvider} from "@artela/aspect-libs/system";
+import {Entry, vm} from "@artela/aspect-libs";
 
 let aspect = new StorageMirror();
 var entry = new Entry(aspect, aspect, null);
@@ -19,5 +18,5 @@ export function isTransactionLevel(): i32 {
 }
 
 export function allocate(size: i32): i32 {
-    return UtilityProvider.alloc(size);
+    return vm.alloc(size);
 }

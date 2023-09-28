@@ -1,7 +1,9 @@
 import {
+    ethereum,
     FilterTxCtx,
     IAspectBlock,
     IAspectTransaction,
+    JitInherentRequest,
     OnBlockFinalizeCtx,
     OnBlockInitializeCtx,
     PostContractCallCtx,
@@ -9,8 +11,9 @@ import {
     PostTxExecuteCtx,
     PreContractCallCtx,
     PreTxExecuteCtx,
-    JustInTimeCaller,
-    ethereum, JitInherentRequest, sys, utils, vm, JitCallMessage, BigInt
+    sys,
+    utils,
+    vm
 } from "@artela/aspect-libs";
 
 export class StorageMirror implements IAspectTransaction, IAspectBlock {
@@ -20,7 +23,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
 
     isOwner(sender: string): bool {
         let value = sys.aspectProperty().get<string>("owner");
-        return value.includes(sender);
+        return value!.includes(sender);
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): void {
@@ -51,18 +54,17 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
             let walletAddress = sys.aspectProperty().get<string>("wallet")!;
             vm.log("🐸🐸 wallet: " + walletAddress + "        ");
             let contractAddress = sys.aspectProperty().get<string>("contract")!;
-             vm.log("🐸🐸 contract: " + contractAddress + "        ");
+            vm.log("🐸🐸 contract: " + contractAddress + "        ");
             const calldata = ethereum.abiEncode('execute', [
                 ethereum.Address.fromHexString(contractAddress),
                 ethereum.Number.fromU64(0),
                 ethereum.Bytes.fromHexString(txData),
             ]);
-             vm.log("🐸🐸 txData: " + txData + "        ");
-             vm.log("🐸🐸 calldata: " + calldata + "        ");
+            vm.log("🐸🐸 txData: " + txData + "        ");
+            vm.log("🐸🐸 calldata: " + calldata + "        ");
 
-
-            let request = new JitCallMessage(
-                walletAddress,
+            let request = new JitInherentRequest(
+                utils.hexToUint8Array(walletAddress),
                 new Uint8Array(0),
                 new Uint8Array(0),
                 utils.hexToUint8Array(calldata),
@@ -73,9 +75,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
                 new Uint8Array(0),
             );
 
-            const jitCaller =  JustInTimeCaller.get();
-            let response = jitCaller.submit(request);
-             vm.log("---1--" + response!.success.toString() + " " + response!.errorMsg)
+            let response = sys.inherentCall(ctx).submit(request);
             AssertTrue(!!response!.success, 'failed to call JIT');
         }
     }
