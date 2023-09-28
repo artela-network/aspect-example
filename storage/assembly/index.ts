@@ -3,7 +3,7 @@
 
 import {StoreAspect} from "./aspect/store-aspect"
 import {Entry} from "@artela/aspect-libs/types";
-import {UtilityProvider} from "@artela/aspect-libs/system";
+import {vm} from "@artela/aspect-libs/system";
 
 let salaryPayment = new StoreAspect();
 var entry = new Entry(salaryPayment, salaryPayment, null);
@@ -22,5 +22,5 @@ export function isTransactionLevel(): i32 {
 }
 
 export function allocate(size: i32): i32 {
-    return UtilityProvider.alloc(size);
+    return vm.alloc(size);
 }

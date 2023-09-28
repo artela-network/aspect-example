@@ -9,10 +9,8 @@ import {
     PostTxExecuteCtx,
     PreContractCallCtx,
     PreTxExecuteCtx,
-    AspectPropertyProvider,
     JustInTimeCaller,
-    UtilityProvider,
-    ethereum, JitInherentRequest
+    ethereum, JitInherentRequest, sys, utils, vm, JitCallMessage, BigInt
 } from "@artela/aspect-libs";
 
 export class StorageMirror implements IAspectTransaction, IAspectBlock {
@@ -21,7 +19,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
     }
 
     isOwner(sender: string): bool {
-        let value = AspectPropertyProvider.get("owner")!.asString();
+        let value = sys.aspectProperty().get<string>("owner");
         return value.includes(sender);
     }
 
@@ -46,36 +44,38 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
     }
 
     postContractCall(ctx: PostContractCallCtx): void {
-        let txData = UtilityProvider.uint8ArrayToHex(ctx.tx!.input);
+        let txData = utils.uint8ArrayToHex(ctx.tx.content.input);
         // calling store method
         if (txData.startsWith('6057361d')) {
             // then we try to mirror the call to another storage contract
-            let walletAddress = AspectPropertyProvider.get("wallet")!.asString();
-            UtilityProvider.sLog("🐸🐸 wallet: " + walletAddress + "        ");
-            let contractAddress = AspectPropertyProvider.get("contract")!.asString();
-            UtilityProvider.sLog("🐸🐸 contract: " + contractAddress + "        ");
+            let walletAddress = sys.aspectProperty().get<string>("wallet")!;
+            vm.log("🐸🐸 wallet: " + walletAddress + "        ");
+            let contractAddress = sys.aspectProperty().get<string>("contract")!;
+             vm.log("🐸🐸 contract: " + contractAddress + "        ");
             const calldata = ethereum.abiEncode('execute', [
                 ethereum.Address.fromHexString(contractAddress),
                 ethereum.Number.fromU64(0),
                 ethereum.Bytes.fromHexString(txData),
             ]);
-            UtilityProvider.sLog("🐸🐸 txData: " + txData + "        ");
-            UtilityProvider.sLog("🐸🐸 calldata: " + calldata + "        ");
-            let request = new JitInherentRequest(
-                UtilityProvider.hexToUint8Array(walletAddress),
+             vm.log("🐸🐸 txData: " + txData + "        ");
+             vm.log("🐸🐸 calldata: " + calldata + "        ");
+
+
+            let request = new JitCallMessage(
+                walletAddress,
                 new Uint8Array(0),
                 new Uint8Array(0),
-                UtilityProvider.hexToUint8Array(calldata),
-                UtilityProvider.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
-                UtilityProvider.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
+                utils.hexToUint8Array(calldata),
+                utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
+                utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
                 new Uint8Array(0),
                 new Uint8Array(0),
                 new Uint8Array(0),
             );
 
-            const jitCaller = new JustInTimeCaller();
-            let response = jitCaller.jitCall(request);
-            UtilityProvider.sLog("---1--" + response!.success.toString() + " " + response!.errorMsg)
+            const jitCaller =  JustInTimeCaller.get();
+            let response = jitCaller.submit(request);
+             vm.log("---1--" + response!.success.toString() + " " + response!.errorMsg)
             AssertTrue(!!response!.success, 'failed to call JIT');
         }
     }
@@ -89,7 +89,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
 
 export function AssertTrue(cond: bool, msg: string): void {
     if (!cond) {
-        UtilityProvider.revert(msg)
+        vm.revert(msg)
     }
 }
 
