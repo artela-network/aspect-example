@@ -10,11 +10,9 @@ import {
     PostTxExecuteCtx,
     PreContractCallCtx,
     PreTxExecuteCtx,
-    AspectPropertyProvider,
     ethereum,
     EthTransaction,
-    Opts,
-    ScheduleTx
+    ScheduleTx, sys, ScheduleOpts
 } from "@artela/aspect-libs";
 
 class SalaryPayment implements IAspectTransaction, IAspectBlock {
@@ -24,7 +22,7 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
     }
 
     isOwner(sender: string): bool {
-        let value = AspectPropertyProvider.get("owner")!.asString();
+        let value = sys.aspectProperty().get<string>("owner")!;
         return !!value.includes(sender);
     }
 
@@ -38,20 +36,21 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
         // everyNBlocks(5): execution at every 5th block since started.
         // maxRetry(2): Transaction confirmation on the blockchain is not guaranteed but rather determined by the gas fee.
         // If a transaction fails to be confirmed on the blockchain, it can be retried up to a maximum of two times.
-        const periodicSch = ctx.schedule.periodic("myPeriodicSchedule")
+        const periodicSch = ctx.schedule.periodic("myPeriodic001")
             .startAfter(3)
-            .count(1000)
+            .execCount(1000)
             .everyNBlocks(5)
             .maxRetry(2);
-        const tx = this.scheduleTx(AspectPropertyProvider.get("ScheduleTo")!.asString(),
-            AspectPropertyProvider.get("Broker")!.asString(),
-            AspectPropertyProvider.get("TargetAddr")!.asString());
+        const tx = this.scheduleTx(
+            sys.aspectProperty().get<string>("ScheduleTo")!,
+            sys.aspectProperty().get<string>("Broker")!,
+            sys.aspectProperty().get<string>("TargetAddr")!);
         periodicSch.submit(tx);
 
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = AspectPropertyProvider.get("binding")!.asString();
+        let value = sys.aspectProperty().get<string>("binding")!;
         return !!value.includes(contractAddr);
     }
 
@@ -79,7 +78,7 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
         // the scheduled transaction with params.
         return new ScheduleTx(scheduleTo).New(
             payload,
-            new Opts(0, "200000000", "30000", broker))
+            new ScheduleOpts(0, "200000000", "30000", broker))
 
     }
 
