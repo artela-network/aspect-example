@@ -23,7 +23,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
 
     isOwner(sender: string): bool {
         let value = sys.aspectProperty().get<string>("owner");
-        return value!.includes(sender);
+        return value.includes(sender);
     }
 
     onBlockInitialize(ctx: OnBlockInitializeCtx): void {
