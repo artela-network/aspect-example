@@ -1,7 +1,7 @@
 // The entry file of your WebAssembly module.
 
 import {
-    AspectPropertyProvider, BigInt, ethereum,
+    BigInt, ethereum,
     FilterTxCtx,
     IAspectBlock,
     IAspectTransaction,
@@ -11,8 +11,8 @@ import {
     PostTxCommitCtx,
     PostTxExecuteCtx,
     PreContractCallCtx,
-    PreTxExecuteCtx,
-    UtilityProvider
+    PreTxExecuteCtx, sys,
+    vm,
 } from "@artela/aspect-libs";
 import {HoneyPotState} from "./honeypot_storage";
 
@@ -20,14 +20,15 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
     isOwner(sender: string): bool {
-        let value = AspectPropertyProvider.get("owner")!.asString();
+        let value = sys.aspectProperty().get<string>("owner")!;
         return !!value.includes(sender);
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = AspectPropertyProvider.get("binding")!.asString();
+        let value = sys.aspectProperty().get<string>("binding")!;
         return !!value.includes(contractAddr);
     }
+
 
     onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
     }

@@ -4,20 +4,20 @@ import {
     EthStateChange,
     State,
     StateChange,
-    StateKey,
-    TraceCtx,
-    UtilityProvider
+    StateKey, TraceContext, utils,
+
+
 } from "@artela/aspect-libs";
 
 export namespace HoneyPotState {
     export class balances_MappingValue extends StateChange<BigInt> {
 
-        constructor(ctx: TraceCtx, addr: string, indices: Uint8Array[] = []) {
-            super(ctx, addr, 'HoneyPot.balances', indices);
+        constructor(ctx: TraceContext, addr: string, indices: Uint8Array[] = []) {
+            super({ctx:ctx, account:addr, stateVar:'HoneyPot.balances', indices:indices});
         }
 
         override unmarshalState(raw: EthStateChange): State<BigInt> {
-            let valueHex = UtilityProvider.uint8ArrayToHex(raw.value);
+            let valueHex = utils.uint8ArrayToHex(raw.value);
             let value = BigInt.fromString(valueHex, 16);
             return new State(raw.account, value, raw.callIndex);
         }
@@ -25,15 +25,15 @@ export namespace HoneyPotState {
 
     export class balances extends StateKey<string> {
 
-        constructor(ctx: TraceCtx, addr: string, indices: Uint8Array[] = []) {
-            super(ctx, addr, 'HoneyPot.balances', indices);
+        constructor(ctx: TraceContext, addr: string, indices: Uint8Array[] = []) {
+            super({ctx:ctx, account:addr, stateVar:'HoneyPot.balances', indices:indices});
         }
 
         @operator("[]")
         get(index: string): balances_MappingValue {
             // @ts-ignore
             return new balances_MappingValue(this.ctx, this.account,
-                UtilityProvider.arrayCopyPush(this.prefixes, this.parseKey(index)));
+                utils.arrayCopyPush(this.prefixes, this.parseKey(index)));
         }
 
         protected parseKey(key: string): Uint8Array {
@@ -43,12 +43,12 @@ export namespace HoneyPotState {
 
     export class _balance_ extends StateChange<BigInt> {
 
-        constructor(ctx: TraceCtx, addr: string, indices: Uint8Array[] = []) {
-            super(ctx, addr, '.balance', indices);
+        constructor(ctx: TraceContext, addr: string, indices: Uint8Array[] = []) {
+            super({ctx:ctx, account:addr, stateVar:'.balances', indices:indices});
         }
 
         override unmarshalState(raw: EthStateChange): State<BigInt> {
-            let valueHex = UtilityProvider.uint8ArrayToHex(raw.value);
+            let valueHex = utils.uint8ArrayToHex(raw.value);
             let value = BigInt.fromString(valueHex, 16);
             return new State(raw.account, value, raw.callIndex);
         }

@@ -2,7 +2,6 @@
 // The entry file of your WebAssembly module.
 
 import {
-  AspectPropertyProvider,
   FilterTxCtx,
   IAspectBlock,
   IAspectTransaction,
@@ -12,19 +11,18 @@ import {
   PostTxCommitCtx,
   PostTxExecuteCtx,
   PreContractCallCtx,
-  PreTxExecuteCtx,
-  UtilityProvider
+  PreTxExecuteCtx, sys, vm,
 } from "@artela/aspect-libs";
 
 class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
   isOwner(sender: string): bool {
-    let value = AspectPropertyProvider.get("owner")!.asString();
+    let value = sys.aspectProperty().get<string>("owner")!;
     return !!value.includes(sender);
   }
   onContractBinding(contractAddr: string): bool {
-    let value = AspectPropertyProvider.get("binding")!.asString();
+    let value = sys.aspectProperty().get<string>("binding")!;
     return !!value.includes(contractAddr);
   }
   onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
@@ -40,17 +38,17 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
   preTxExecute(ctx: PreTxExecuteCtx): void {
   }
   preContractCall(ctx: PreContractCallCtx): void {
-    let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}", ctx.currInnerTx!.to.toString());
-    let callCount = ctx.aspectContext.get(contextKey)!.asI64();
+    let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}", ctx.currentCall.to.toString());
+    let callCount = ctx.aspect.transientStorage<u64>(contextKey).unwrap()!;
     callCount = callCount+1;
-    ctx.aspectContext.set(contextKey, callCount.toString());
+    ctx.aspect.transientStorage<u64>(contextKey).set<u64>(callCount);
   }
   postContractCall(ctx: PostContractCallCtx): void {
-    let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}", ctx.currInnerTx!.to.toString());
-    let callCount = ctx.aspectContext.get(contextKey)!.asI64();
+    let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}", ctx.currentCall.to.toString());
+    let callCount = ctx.aspect.transientStorage<u64>(contextKey).unwrap()!;
     // If the call count large than 1, mark the transaction as failed.
     if (callCount > 1) {
-      UtilityProvider.revert( "multiple inner tx calls");
+      vm.revert( "multiple inner tx calls");
     }
   }
 

@@ -1,7 +1,6 @@
 // The entry file of your WebAssembly module.
 
 import {
-    AspectPropertyProvider,
     FilterTxCtx,
     IAspectBlock,
     IAspectTransaction,
@@ -11,20 +10,19 @@ import {
     PostTxCommitCtx,
     PostTxExecuteCtx,
     PreContractCallCtx,
-    PreTxExecuteCtx,
-    UtilityProvider
+    PreTxExecuteCtx, sys, vm,
 } from "@artela/aspect-libs";
 
 class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
     isOwner(sender: string): bool {
-        let value = AspectPropertyProvider.get("owner")!.asString();
+        let value = sys.aspectProperty().get<string>("owner")!;
         return !!value.includes(sender);
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = AspectPropertyProvider.get("binding")!.asString();
+        let value = sys.aspectProperty().get<string>("binding")!;
         return !!value.includes(contractAddr);
     }
 
@@ -47,24 +45,24 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
     preContractCall(ctx: PreContractCallCtx): void {
 
-        let curContract = ctx.currInnerTx!.to.toString();
+        let curContract = ctx.currentCall.to.toString();
         let reentKey = this._CONTEXT_KEY.replace("{InnerTxToAddr}", curContract);
 
         // 2.Check if another transaction has already occupied.
-        if (this._ENTERED == ctx.aspectContext.get(reentKey)!.asString()) {
-            UtilityProvider.revert("revert")
+        if (this._ENTERED == ctx.aspect.transientStorage<string>(reentKey).unwrap()!) {
+            vm.revert("revert")
         }
         // 3.Set reentrant lock entered.
-        ctx.aspectContext.set(reentKey, this._ENTERED);
+        ctx.aspect.transientStorage(reentKey).set<string>(this._ENTERED);
     }
 
     postContractCall(ctx: PostContractCallCtx): void {
         // 1.Get reentrant lock key of current contract.
-        let curContract = ctx.currInnerTx!.to.toString();
+        let curContract = ctx.currentCall.to.toString();
         let reentKey = this._CONTEXT_KEY.replace("{InnerTxToAddr}", curContract);
 
         // 2.Set reentrant lock not entered.
-        ctx.aspectContext.set(reentKey, this._NOT_ENTERED);
+        ctx.aspect.transientStorage(reentKey).set<string>(this._NOT_ENTERED);
     }
 
     postTxExecute(ctx: PostTxExecuteCtx): void {
