@@ -1,7 +1,7 @@
 // The entry file of your WebAssembly module.
 
 import {
-    BigInt, ethereum,
+    BigInt,
     FilterTxCtx,
     IAspectBlock,
     IAspectTransaction,
@@ -20,12 +20,12 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
     isOwner(sender: string): bool {
-        let value = sys.aspectProperty().get<string>("owner")!;
+        let value = sys.aspectProperty().get<string>("owner");
         return !!value.includes(sender);
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = sys.aspectProperty().get<string>("binding")!;
+        let value = sys.aspectProperty().get<string>("binding");
         return !!value.includes(contractAddr);
     }
 
@@ -50,15 +50,15 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
     postContractCall(ctx: PostContractCallCtx): void {
         // 1.Calculate the eth balance change of DeFi SmartContract(HoneyPot) before and after tx.
-        let sysBalance = new HoneyPotState._balance_(ctx.traceContext, ctx.currInnerTx!.to);
+        let sysBalance = new HoneyPotState._balance_(ctx.trace, ctx.currentCall.to);
         let deltaSys = sysBalance.current()!.sub(sysBalance.original());
 
 
         // 2.Calculate the financial change of withdrawer in DeFi SmartContract(HoneyPot) before and after tx.
-        let contractState = new HoneyPotState.balances(ctx.traceContext, ctx.currInnerTx!.to);
+        let contractState = new HoneyPotState.balances(ctx.trace, ctx.currentCall.to);
 
         let deltaUser = BigInt.ZERO;
-        let fromState = contractState.get(ctx.currInnerTx!.from)
+        let fromState = contractState.get(ctx.currentCall.from)
         let current = fromState.current()
         let original = fromState.original();
         if (current && original) {
@@ -66,7 +66,7 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         }
         // 3.Verify if the above two values are equal.
         if (deltaSys.compareTo(deltaUser) != 0) {
-            UtilityProvider.revert("risky transaction")
+            vm.revert("risky transaction")
         }
     }
 

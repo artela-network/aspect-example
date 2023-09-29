@@ -22,7 +22,7 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
     }
 
     isOwner(sender: string): bool {
-        let value = sys.aspectProperty().get<string>("owner")!;
+        let value = sys.aspectProperty().get<string>("owner");
         return !!value.includes(sender);
     }
 
@@ -42,15 +42,15 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
             .everyNBlocks(5)
             .maxRetry(2);
         const tx = this.scheduleTx(
-            sys.aspectProperty().get<string>("ScheduleTo")!,
-            sys.aspectProperty().get<string>("Broker")!,
-            sys.aspectProperty().get<string>("TargetAddr")!);
+            sys.aspectProperty().get<string>("ScheduleTo"),
+            sys.aspectProperty().get<string>("Broker"),
+            sys.aspectProperty().get<string>("TargetAddr"));
         periodicSch.submit(tx);
 
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = sys.aspectProperty().get<string>("binding")!;
+        let value = sys.aspectProperty().get<string>("binding");
         return !!value.includes(contractAddr);
     }
 

@@ -24,15 +24,14 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
         // add test data
         ctx.aspect.transientStorage<string>("k1").set<string>("v2");
         ctx.aspect.transientStorage<string>("k2").set<string>("v2");
-
         // add hostapi return data
-        const k1 = ctx.aspect.transientStorage<string>("k1").unwrap()!
-        const k2 = ctx.aspect.transientStorage<string>("k2")!.unwrap()!;
+        const k1 = ctx.aspect.transientStorage<string>("k1").unwrap();
+        const k2 = ctx.aspect.transientStorage<string>("k2").unwrap();
         return k1 != "v1" && k2 != "v2";
     }
 
     isOwner(sender: string): bool {
-        let value = sys.aspectProperty().get<string>("owner")!
+        let value = sys.aspectProperty().get<string>("owner")
         return !!value.includes(sender);
     }
 
@@ -49,9 +48,9 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
         let payload = ethereum.abiEncode('store', [num]);
         // the scheduled transaction with params.
 
-        let scheduleTo = sys.aspectProperty().get<string>("ScheduleTo")!
+        let scheduleTo = sys.aspectProperty().get<string>("ScheduleTo")
 
-        let broker = sys.aspectProperty().get<string>("Broker")!;
+        let broker = sys.aspectProperty().get<string>("Broker");
 
         let tx = new ScheduleTx(scheduleTo).New(
             payload,
@@ -70,7 +69,7 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = sys.aspectProperty().get<string>("binding")!
+        let value = sys.aspectProperty().get<string>("binding")
         return !!value.includes(contractAddr);
     }
 
@@ -115,7 +114,10 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
     }
 
     preTxExecute(ctx: PreTxExecuteCtx): void {
+        //for smart contract call
+        sys.aspectState(ctx).get<string>("k2").set<string>("test")
 
+        ctx.aspect.transientStorage<string>("k2").set<string>("setk2")
         AssertTrue(ctx.tx != null, 'preTxExecute tx is empty')
         AssertTrue(ctx.aspect != null, "preTxExecute context is empty")
         AssertTrue(ctx.env != null, "preTxExecute context is empty")

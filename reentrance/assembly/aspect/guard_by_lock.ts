@@ -17,12 +17,12 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
     isOwner(sender: string): bool {
-        let value = sys.aspectProperty().get<string>("owner")!;
+        let value = sys.aspectProperty().get<string>("owner");
         return !!value.includes(sender);
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = sys.aspectProperty().get<string>("binding")!;
+        let value = sys.aspectProperty().get<string>("binding");
         return !!value.includes(contractAddr);
     }
 
@@ -49,11 +49,11 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         let reentKey = this._CONTEXT_KEY.replace("{InnerTxToAddr}", curContract);
 
         // 2.Check if another transaction has already occupied.
-        if (this._ENTERED == ctx.aspect.transientStorage<string>(reentKey).unwrap()!) {
+        if (this._ENTERED == ctx.aspect.transientStorage<string>(reentKey).unwrap()) {
             vm.revert("revert")
         }
         // 3.Set reentrant lock entered.
-        ctx.aspect.transientStorage(reentKey).set<string>(this._ENTERED);
+        ctx.aspect.transientStorage<string>(reentKey).set<string>(this._ENTERED);
     }
 
     postContractCall(ctx: PostContractCallCtx): void {
@@ -62,7 +62,7 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         let reentKey = this._CONTEXT_KEY.replace("{InnerTxToAddr}", curContract);
 
         // 2.Set reentrant lock not entered.
-        ctx.aspect.transientStorage(reentKey).set<string>(this._NOT_ENTERED);
+        ctx.aspect.transientStorage<string>(reentKey).set<string>(this._NOT_ENTERED);
     }
 
     postTxExecute(ctx: PostTxExecuteCtx): void {
