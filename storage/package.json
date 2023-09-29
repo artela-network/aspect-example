@@ -10,7 +10,7 @@
     "asbuild:release": "asc assembly/index.ts --target release",
     "asbuild": "npm run asbuild:debug && npm run asbuild:release",
     "start": "npx serve .",
-    "build-contract": "solc -o ./build/contract/ --via-ir --abi --bin ./contracts/*.sol  --overwrite",
+    "build-contract": "asolc -o ./build/contract/ --via-ir --abi --bin ./contracts/*.sol  --overwrite",
     "build-all": "npm install && npm run build-contract && npm run asbuild:release"
   },
   "keywords": [],

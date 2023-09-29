@@ -39,7 +39,6 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
     }
 
     preTxExecute(ctx: PreTxExecuteCtx): void {
-
     }
 
     preContractCall(ctx: PreContractCallCtx): void {
@@ -51,23 +50,19 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
         // calling store method
         if (txData.startsWith('6057361d')) {
             // then we try to mirror the call to another storage contract
-            let walletAddress = sys.aspectProperty().get<string>("wallet")!;
-            vm.log("🐸🐸 wallet: " + walletAddress + "        ");
-            let contractAddress = sys.aspectProperty().get<string>("contract")!;
-            vm.log("🐸🐸 contract: " + contractAddress + "        ");
-            const calldata = ethereum.abiEncode('execute', [
+            let walletAddress = sys.aspectProperty().get<string>("wallet");
+            let contractAddress = sys.aspectProperty().get<string>("contract");
+            const callData = ethereum.abiEncode('execute', [
                 ethereum.Address.fromHexString(contractAddress),
                 ethereum.Number.fromU64(0),
                 ethereum.Bytes.fromHexString(txData),
             ]);
-            vm.log("🐸🐸 txData: " + txData + "        ");
-            vm.log("🐸🐸 calldata: " + calldata + "        ");
 
             let request = new JitInherentRequest(
                 utils.hexToUint8Array(walletAddress),
                 new Uint8Array(0),
                 new Uint8Array(0),
-                utils.hexToUint8Array(calldata),
+                utils.hexToUint8Array(callData),
                 utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
                 utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
                 new Uint8Array(0),
@@ -76,7 +71,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
             );
 
             let response = sys.inherentCall(ctx).submit(request);
-            AssertTrue(!!response!.success, 'failed to call JIT');
+            vm.require(response.success, 'failed to call JIT');
         }
     }
 
@@ -85,24 +80,4 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
 
     postTxCommit(ctx: PostTxCommitCtx): void {
     }
-}
-
-export function AssertTrue(cond: bool, msg: string): void {
-    if (!cond) {
-        vm.revert(msg)
-    }
-}
-
-function appendUint8Arrays(a: Uint8Array, b: Uint8Array): Uint8Array {
-    let result = new Uint8Array(a.length + b.length);
-
-    for (let i = 0; i < a.length; i++) {
-        result[i] = a[i];
-    }
-
-    for (let i = 0; i < b.length; i++) {
-        result[i + a.length] = b[i];
-    }
-
-    return result;
 }

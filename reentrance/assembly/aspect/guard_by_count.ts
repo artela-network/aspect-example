@@ -18,12 +18,12 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
   isOwner(sender: string): bool {
-    let value = sys.aspectProperty().get<string>("owner")!;
-    return !!value.includes(sender);
+    let value = sys.aspectProperty().get<string>("owner");
+    return value.includes(sender);
   }
   onContractBinding(contractAddr: string): bool {
-    let value = sys.aspectProperty().get<string>("binding")!;
-    return !!value.includes(contractAddr);
+    let value = sys.aspectProperty().get<string>("binding");
+    return value.includes(contractAddr);
   }
   onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
   }
@@ -39,13 +39,13 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
   }
   preContractCall(ctx: PreContractCallCtx): void {
     let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}", ctx.currentCall.to.toString());
-    let callCount = ctx.aspect.transientStorage<u64>(contextKey).unwrap()!;
+    let callCount = ctx.aspect.transientStorage<u64>(contextKey).unwrap();
     callCount = callCount+1;
     ctx.aspect.transientStorage<u64>(contextKey).set<u64>(callCount);
   }
   postContractCall(ctx: PostContractCallCtx): void {
     let contextKey = this.CONTEXT_KEY.replace("{InnerTxToAddr}", ctx.currentCall.to.toString());
-    let callCount = ctx.aspect.transientStorage<u64>(contextKey).unwrap()!;
+    let callCount = ctx.aspect.transientStorage<u64>(contextKey).unwrap();
     // If the call count large than 1, mark the transaction as failed.
     if (callCount > 1) {
       vm.revert( "multiple inner tx calls");
