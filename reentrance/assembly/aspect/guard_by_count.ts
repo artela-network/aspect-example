@@ -11,18 +11,18 @@ import {
   PostTxCommitCtx,
   PostTxExecuteCtx,
   PreContractCallCtx,
-  PreTxExecuteCtx, sys, vm,
+  PreTxExecuteCtx, sys,
 } from "@artela/aspect-libs";
 
 class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
   isOwner(sender: string): bool {
-    let value = sys.aspectProperty().get<string>("owner");
+    let value = sys.aspect.property.get<string>("owner");
     return value.includes(sender);
   }
   onContractBinding(contractAddr: string): bool {
-    let value = sys.aspectProperty().get<string>("binding");
+    let value = sys.aspect.property.get<string>("binding");
     return value.includes(contractAddr);
   }
   onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
@@ -48,7 +48,7 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
     let callCount = ctx.aspect.transientStorage<u64>(contextKey).unwrap();
     // If the call count large than 1, mark the transaction as failed.
     if (callCount > 1) {
-      vm.revert( "multiple inner tx calls");
+      sys.revert( "multiple inner tx calls");
     }
   }
 

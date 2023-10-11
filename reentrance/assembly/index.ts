@@ -1,6 +1,6 @@
 // The entry file of your WebAssembly module.
 
-import { Entry,vm } from "@artela/aspect-libs";
+import { Entry } from "@artela/aspect-libs";
 
 //import Aspect from "./aspect/guard_by_trace"
 //import Aspect from "./aspect/guard_by_lock"
@@ -22,5 +22,5 @@ export function isTransactionLevel(): i32 {
 }
 
 export function allocate(size: i32): i32 {
-  return vm.alloc(size);
+  return heap.alloc(size) as i32;
 }

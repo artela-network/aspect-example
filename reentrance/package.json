@@ -20,7 +20,7 @@
   "license": "ISC",
   "dependencies": {
 
-    "@artela/aspect-libs": "^0.0.20",
+    "@artela/aspect-libs": "file:/Users/jack/Projects/js/aspect-tooling/packages/libs",
     "@artela/web3": "^1.9.14",
     "@artela/web3-atl-aspect": "^1.9.14",
     "@artela/web3-eth-contract": "^1.9.14",
