@@ -12,8 +12,6 @@ import {
     PreContractCallCtx,
     PreTxExecuteCtx,
     sys,
-    utils,
-    vm
 } from "@artela/aspect-libs";
 
 export class StorageMirror implements IAspectTransaction, IAspectBlock {
@@ -22,7 +20,7 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
     }
 
     isOwner(sender: string): bool {
-        let value = sys.aspectProperty().get<string>("owner");
+        let value = sys.aspect.property.get<string>("owner");
         return value.includes(sender);
     }
 
@@ -46,12 +44,12 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
     }
 
     postContractCall(ctx: PostContractCallCtx): void {
-        let txData = utils.uint8ArrayToHex(ctx.tx.content.input);
+        let txData = sys.utils.uint8ArrayToHex(ctx.tx.content.unwrap().input);
         // calling store method
         if (txData.startsWith('6057361d')) {
             // then we try to mirror the call to another storage contract
-            let walletAddress = sys.aspectProperty().get<string>("wallet");
-            let contractAddress = sys.aspectProperty().get<string>("contract");
+            let walletAddress = sys.aspect.property.get<string>("wallet");
+            let contractAddress = sys.aspect.property.get<string>("contract");
             const callData = ethereum.abiEncode('execute', [
                 ethereum.Address.fromHexString(contractAddress),
                 ethereum.Number.fromU64(0),
@@ -59,19 +57,19 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
             ]);
 
             let request = new JitInherentRequest(
-                utils.hexToUint8Array(walletAddress),
+                sys.utils.hexToUint8Array(walletAddress),
                 new Uint8Array(0),
                 new Uint8Array(0),
-                utils.hexToUint8Array(callData),
-                utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
-                utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
+                sys.utils.hexToUint8Array(callData),
+                sys.utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
+                sys.utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
                 new Uint8Array(0),
                 new Uint8Array(0),
                 new Uint8Array(0),
             );
 
-            let response = sys.inherentCall(ctx).submit(request);
-            vm.require(response.success, 'failed to call JIT');
+            let response = sys.evm.jitCall(ctx).submit(request);
+            sys.require(response.success, 'failed to call JIT');
         }
     }
 
