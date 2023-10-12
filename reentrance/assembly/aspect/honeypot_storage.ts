@@ -4,16 +4,17 @@ import {
     EthStateChange,
     State,
     StateChange,
+    StateChangeProperties,
     StateKey,
-    StateChangeProperties, sys, TraceCtx,
+    sys,
+    TraceCtx
 } from "@artela/aspect-libs";
 
 export namespace HoneyPotState {
     export class balances_MappingValue extends StateChange<BigInt> {
 
         constructor(ctx: TraceCtx, addr: string, indices: Uint8Array[] = []) {
-            const stateChangeProperties = new StateChangeProperties(  ctx,addr,  'HoneyPot.balances', indices);
-            super(stateChangeProperties);
+            super(new StateChangeProperties(ctx, addr, 'HoneyPot.balances', indices));
         }
 
         override unmarshalState(raw: EthStateChange): State<BigInt> {
@@ -26,8 +27,7 @@ export namespace HoneyPotState {
     export class balances extends StateKey<string> {
 
         constructor(ctx: TraceCtx, addr: string, indices: Uint8Array[] = []) {
-            const stateChangeProperties = new StateChangeProperties(  ctx,addr,  'HoneyPot.balances', indices);
-            super(stateChangeProperties);
+            super(new StateChangeProperties(ctx, addr, 'HoneyPot.balances', indices));
         }
 
         @operator("[]")
@@ -55,8 +55,7 @@ export namespace HoneyPotState {
     export class _balance_ extends StateChange<BigInt> {
 
         constructor(ctx: TraceCtx, addr: string, indices: Uint8Array[] = []) {
-            const stateChangeProperties = new StateChangeProperties(  ctx,addr,  '.balances', indices);
-            super(stateChangeProperties);
+            super(new StateChangeProperties(ctx, addr, '.balance', indices));
         }
 
         override unmarshalState(raw: EthStateChange): State<BigInt> {

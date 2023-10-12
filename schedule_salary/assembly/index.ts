@@ -1,7 +1,7 @@
 // The entry file of your WebAssembly module.
 
 import Aspect from "./aspect/salary_pay"
-import {Entry, vm} from "@artela/aspect-libs";
+import {Entry} from "@artela/aspect-libs";
 
 let salaryPayment = new Aspect();
 let entry = new Entry(salaryPayment, salaryPayment,null);
@@ -20,5 +20,5 @@ export function isTransactionLevel(): i32 {
 }
 
 export function allocate(size: i32): i32 {
-  return vm.alloc(size);
+  return heap.alloc(size);
 }
