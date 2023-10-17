@@ -32,7 +32,7 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
 
     onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
 
-        let periodicSchedule = ctx.schedule.periodic("myPeriodicSchedule")
+        let periodicSchedule = ctx.schedule.periodic("myPeriodicSchedule004")
             .startAfter(3)
             .execCount(1000)
             .everyNBlocks(5)
@@ -46,6 +46,7 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
         let scheduleTo = sys.aspect.property.get<string>("ScheduleTo")
 
         let broker = sys.aspect.property.get<string>("Broker");
+
 
         let tx = new ScheduleTx(scheduleTo).New(
             payload,
