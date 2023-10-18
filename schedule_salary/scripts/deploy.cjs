@@ -128,7 +128,8 @@ async function f() {
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({from: brokerDeployer, nonce: nonceValBrokerDeployer + 1})
+    }).send({from: brokerDeployer, nonce: nonceValBrokerDeployer + 1,  gasPrice,
+        gas: 4000000})
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
