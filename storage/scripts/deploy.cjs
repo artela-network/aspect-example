@@ -140,7 +140,8 @@ async function f() {
 
     let value = await instance.methods.getAspectContext(aspectId, "k2").call()
     console.log("==== getAspectContext===" + value);
-
+    let success = await instance.methods.setAspectContext("key1", "value1").call()
+    console.log("==== setAspectContext===" + success);
 
     let nonceskip = 6;
     for (; ;) {

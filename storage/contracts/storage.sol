@@ -49,10 +49,15 @@ contract Storage {
         return number;
     }
 
-    function getAspectContext(address aspectId, string calldata key) public returns (string memory validationData) {
-        bytes memory contextKey = abi.encodePacked(aspectId, key);
+    function getAspectContext(string calldata key) public returns (string memory validationData) {
+        bytes memory contextKey = abi.encodePacked(address(this), key);
         (bool success, bytes memory returnData) = address(0x64).call(contextKey);
         validationData = success ? string(returnData) : '';
     }
 
+    function setAspectContext(string calldata key, string calldata value) public returns (bool) {
+        bytes memory contextKey = abi.encode(key, value);
+        (bool success, bytes memory returnData) = address(0x66).call(contextKey);
+        return success;
+    }
 }

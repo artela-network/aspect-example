@@ -39,7 +39,7 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
         }
         ctx.mutableState.get<string>(schName).set<string>("open");
 
-        let periodicSchedule = ctx.schedule.periodic("myPeriodicSchedule004")
+        let periodicSchedule = ctx.schedule.periodic("myPeriodicSchedule")
             .startAfter(3)
             .execCount(1000)
             .everyNBlocks(5)

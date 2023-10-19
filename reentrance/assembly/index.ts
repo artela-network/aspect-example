@@ -3,8 +3,8 @@
 import { Entry } from "@artela/aspect-libs";
 
 //import Aspect from "./aspect/guard_by_trace"
-import Aspect from "./aspect/guard_by_lock"
-//import Aspect from "./aspect/guard_by_count"
+//import Aspect from "./aspect/guard_by_lock"
+import Aspect from "./aspect/guard_by_count"
 
 const firstAspect = new Aspect();
 const entry = new Entry(firstAspect, firstAspect,null);
