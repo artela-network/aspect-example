@@ -19,19 +19,14 @@ import {Protobuf} from "as-proto/assembly";
 export class StoreAspect implements IAspectTransaction, IAspectBlock, IAspectOperation {
 
     operation(ctx: OperationCtx, data: Uint8Array): Uint8Array {
-        sys.log("----operation----0")
 
         sys.log(sys.utils.uint8ArrayToString(data))
-        sys.log("----operation----1")
 
         let s = ctx.mutableState.get<string>("k2").unwrap()!
-        sys.log("----operation----2")
 
         sys.require(s == "v2", s + "mutableState get fail")
-        sys.log("----operation----3")
 
         const stringData = new StringData("test")
-        sys.log("----operation----4")
 
         return Protobuf.encode(stringData, StringData.encode);
     }

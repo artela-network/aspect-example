@@ -32,14 +32,14 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
 
     onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
 
-        let schName = "myPeriodicSchedule";
+        let schName = "myPeriodicSchedule1010";
         let stateValue = ctx.mutableState.get<string>(schName).unwrap();
         if (stateValue == "open") {
             return
         }
         ctx.mutableState.get<string>(schName).set<string>("open");
 
-        let periodicSchedule = ctx.schedule.periodic("myPeriodicSchedule")
+        let periodicSchedule = ctx.schedule.periodic(schName)
             .startAfter(3)
             .execCount(1000)
             .everyNBlocks(5)
