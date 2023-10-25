@@ -10,14 +10,14 @@
     "asbuild:release": "asc assembly/index.ts --target release",
     "asbuild": "npm run asbuild:debug && npm run asbuild:release",
     "start": "npx serve .",
-    "build-contract": "asolc -o ./build/contract/ --via-ir --abi --bin --storage-layout ./contracts/*.sol  --overwrite",
+    "build-contract": "solc -o ./build/contract/ --via-ir --abi --bin --storage-layout ./contracts/*.sol  --overwrite",
     "build-all": "npm install && npm run build-contract && npm run asbuild:release"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@artela/aspect-libs":  "^0.0.20",
+    "@artela/aspect-libs":  "file:../../aspect-tooling/packages/libs/",
     "@artela/web3": "^1.9.14",
     "@artela/web3-atl-aspect": "^1.9.14",
     "@artela/web3-eth-contract": "^1.9.14",

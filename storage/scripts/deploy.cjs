@@ -88,7 +88,8 @@ async function f() {
         }, {'key': 'binding', 'value': contractAddr}, {'key': 'owner', 'value': accounts[0]}],
         paymaster: accounts[0],
         proof: '0x0',
-    }).send({from: accounts[0], nonce: nonceVal + 2})
+    }).send({from: accounts[0], nonce: nonceVal + 2, gasPrice,
+        gas: 9000000})
         .on('receipt', (receipt) => {
             console.log(receipt);
         }).on('transactionHash', (txHash) => {
@@ -105,7 +106,8 @@ async function f() {
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({from: accounts[0], nonce: nonceVal + 3})
+    }).send({from: accounts[0], nonce: nonceVal + 3,  gasPrice,
+        gas: 9000000})
         .on('receipt', function (receipt) {
             console.log("=============== bind aspect ===============")
             console.log(receipt)
@@ -138,11 +140,12 @@ async function f() {
 
     let value = await instance.methods.getAspectContext(aspectId, "k2").call()
     console.log("==== getAspectContext===" + value);
-
+    let success = await instance.methods.setAspectContext("key1", "value1").call()
+    console.log("==== setAspectContext===" + success);
 
     let nonceskip = 6;
     for (; ;) {
-        await new Promise(r => setTimeout(r, 5000));
+        await new Promise(r => setTimeout(r, 1000));
 
         let result = await scheduleInstance.methods.retrieve().call()
 

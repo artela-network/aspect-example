@@ -18,11 +18,11 @@ import {
 class SalaryPayment implements IAspectTransaction, IAspectBlock {
 
     filterTx(ctx: FilterTxCtx): bool {
-        return false;
+        return true;
     }
 
     isOwner(sender: string): bool {
-        let value = sys.aspectProperty().get<string>("owner");
+        let value = sys.aspect.property.get<string>("owner");
         return !!value.includes(sender);
     }
 
@@ -36,21 +36,21 @@ class SalaryPayment implements IAspectTransaction, IAspectBlock {
         // everyNBlocks(5): execution at every 5th block since started.
         // maxRetry(2): Transaction confirmation on the blockchain is not guaranteed but rather determined by the gas fee.
         // If a transaction fails to be confirmed on the blockchain, it can be retried up to a maximum of two times.
-        const periodicSch = ctx.schedule.periodic("myPeriodic001")
+        const periodicSch = ctx.schedule.periodic("myPeriodic-0901")
             .startAfter(3)
             .execCount(1000)
             .everyNBlocks(5)
             .maxRetry(2);
         const tx = this.scheduleTx(
-            sys.aspectProperty().get<string>("ScheduleTo"),
-            sys.aspectProperty().get<string>("Broker"),
-            sys.aspectProperty().get<string>("TargetAddr"));
+            sys.aspect.property.get<string>("ScheduleTo"),
+            sys.aspect.property.get<string>("Broker"),
+            sys.aspect.property.get<string>("TargetAddr"));
         periodicSch.submit(tx);
 
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = sys.aspectProperty().get<string>("binding");
+        let value = sys.aspect.property.get<string>("binding");
         return !!value.includes(contractAddr);
     }
 

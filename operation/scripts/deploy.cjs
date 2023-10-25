@@ -103,7 +103,7 @@ async function f() {
     console.log("==== reuslt===" + result);
 
 
-    let rawcall = await aspectInstance.rawcall('0x1167c2e50dFE34b9Ad593d2c6694731097147317')
+    let rawcall = await aspectInstance.operation('0x1167c2e50dFE34b9Ad593d2c6694731097147317')
         .send({from: accounts[0], nonce: nonceVal + 4, gasPrice, gas: 4000000})
         .on('receipt', (receipt) => {
             console.log(receipt);

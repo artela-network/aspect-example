@@ -12,7 +12,6 @@ import {
     PostTxExecuteCtx,
     PreContractCallCtx,
     PreTxExecuteCtx, sys,
-    vm,
 } from "@artela/aspect-libs";
 import {HoneyPotState} from "./honeypot_storage";
 
@@ -20,12 +19,12 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
 
 
     isOwner(sender: string): bool {
-        let value = sys.aspectProperty().get<string>("owner");
+        let value = sys.aspect.property.get<string>("owner");
         return !!value.includes(sender);
     }
 
     onContractBinding(contractAddr: string): bool {
-        let value = sys.aspectProperty().get<string>("binding");
+        let value = sys.aspect.property.get<string>("binding");
         return !!value.includes(contractAddr);
     }
 
@@ -66,7 +65,7 @@ class GuardByCountAspect implements IAspectTransaction, IAspectBlock {
         }
         // 3.Verify if the above two values are equal.
         if (deltaSys.compareTo(deltaUser) != 0) {
-            vm.revert("risky transaction")
+            sys.revert("risky transaction")
         }
     }
 

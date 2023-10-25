@@ -107,7 +107,8 @@ async function f() {
         properties: [{'key': 'wallet', 'value': walletAddr}, {'key': 'contract', 'value': storageContract2.options.address}],
         paymaster: accounts[0],
         proof: '0x0',
-    }).send({from: accounts[0], nonce: nonce++})
+    }).send({from: accounts[0], nonce: nonce++, gas: 10000000,
+        gasPrice})
         .on('receipt', (receipt) => {
             console.log('deploy aspect receipt: ', receipt);
         }).on('transactionHash', (txHash) => {
@@ -148,7 +149,9 @@ async function f() {
         aspectVersion: 1,
     }).send({
         from: accounts[0],
-        nonce: nonce++
+        nonce: nonce++,
+        gas: 10000000,
+        gasPrice
     }).on('receipt', function (receipt) {
         console.log('aspect bind receipt: ', receipt);
     }).on('transactionHash', (txHash) => {
