@@ -22,3 +22,9 @@ This repository maintains a set of Aspect examples.
 * case 3 [Aspect operation call case](operation/README.md) 
 * case 4 [Aspect bind storage Contract，Contract call Aspect Context](storage/README.md) 
 * case 5 [Using Aspect to mirror a transaction via jitcall](storage_mirror/README.md) 
+
+
+## License
+Copyright © Artela Network, Inc. All rights reserved.
+
+Licensed under the [Apache v2](LICENSE) License.
