@@ -59,6 +59,8 @@ export class StorageMirror implements IAspectTransaction, IAspectBlock {
                 ethereum.Bytes.fromHexString(txData),
             ]);
 
+            sys.asp
+
             let request = new JitInherentRequest(
                 sys.utils.hexToUint8Array(walletAddress),
                 new Uint8Array(0),
