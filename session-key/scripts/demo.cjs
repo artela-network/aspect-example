@@ -22,13 +22,13 @@ async function f() {
     let account = web3.eth.accounts.privateKeyToAccount(privKey);
     web3.eth.accounts.wallet.add(account.privateKey);
 
-    let gasPrice = await web3.atl.getGasPrice();
+    let gasPrice = await web3.eth.getGasPrice();
 
     // get chain id
     let chainId = await web3.eth.getChainId();
 
     // retrieve current nonce
-    let nonce = await web3.atl.getTransactionCount(account.address);
+    let nonce = await web3.eth.getTransactionCount(account.address);
 
     // instantiate an instance of the contract
     let aspectCore = web3.atl.aspectCore();
