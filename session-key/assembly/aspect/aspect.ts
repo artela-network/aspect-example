@@ -193,6 +193,7 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
         else {
             sys.revert("unknown op");
         }
+        return new Uint8Array(0);
     }
 
     parseOP(calldata: string): string {

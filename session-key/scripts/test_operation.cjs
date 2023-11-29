@@ -9,7 +9,7 @@ const BigNumber = require('bignumber.js');
 // init connection to Artela node
 const web3 = new Web3('http://127.0.0.1:8545');
 
-const privKey = '0x0b7519cfc6ea2f694d8320fd77b693fa88c39083fce6dec48630004c4b19d886';
+let privKey = ''; // modify before running this test
 const account = web3.eth.accounts.privateKeyToAccount(privKey);
 web3.eth.accounts.wallet.add(account.privateKey);
 
