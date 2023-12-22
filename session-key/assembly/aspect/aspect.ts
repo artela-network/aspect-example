@@ -1,11 +1,13 @@
 import {
     BigInt,
+    EthBlockHeader,
     ethereum,
     FilterTxCtx,
     IAspectBlock,
     IAspectOperation,
     IAspectTransaction,
     ITransactionVerifier,
+    NewMessageError,
     OnBlockFinalizeCtx,
     OnBlockInitializeCtx,
     OperationCtx,
@@ -18,7 +20,7 @@ import {
     sys,
     VerifyTxCtx,
 } from "@artela/aspect-libs";
-
+import { Protobuf } from 'as-proto/assembly';
 /**
  * There are two types of Aspect: Transaction-Level Aspect and Block-Level Aspect.
  * Transaction-Level Aspect will be triggered whenever there is a transaction calling the bound smart contract.
@@ -326,7 +328,7 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
             + r
             + s;
 
-        const ret = sys.crypto.ecRecover(sys.utils.hexToUint8Array(syscallInput));
+        const ret = sys.hostApi.crypto.ecRecover(sys.utils.hexToUint8Array(syscallInput));
         const signer = sys.utils.uint8ArrayToHex(ret.subarray(12, 32));
 
         if (signer == "") {
@@ -350,13 +352,28 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
             + r
             + s;
 
-        const ret = sys.crypto.ecRecover(sys.utils.hexToUint8Array(syscallInput));
+        const ret = sys.hostApi.crypto.ecRecover(sys.utils.hexToUint8Array(syscallInput));
         const retHex = sys.utils.uint8ArrayToHex(ret);
 
         return retHex;
     }
 
     verifyTx(ctx: VerifyTxCtx, validationData: Uint8Array): Uint8Array {
+        var number = ctx.block.header.unwrap().number;
+        sys.log("header number="+number.toString(10))
+        var timestamp = ctx.block.header.unwrap().timestamp;
+        sys.log("timestamp=="+timestamp.toString(10))
+
+        var queryResponse = sys.hostApi.runtimeContext.get("block^header^0")
+        if (!queryResponse.data!.value) {
+            throw NewMessageError(queryResponse.result!.message);
+        }
+        var ethBlockHeader = Protobuf.decode<EthBlockHeader>(
+            queryResponse.data!.value,
+            EthBlockHeader.decode,
+        );
+        sys.log("header="+ethBlockHeader.number.toString(10))
+
         // params encode rules:
         //     20 bytes: from
         //         eg. e2f8857467b61f2e4b1a614a0d560cd75c0c076f
@@ -378,7 +395,7 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
             + r
             + s;
 
-        const ret = sys.crypto.ecRecover(sys.utils.hexToUint8Array(syscallInput));
+        const ret =sys.hostApi.crypto.ecRecover(sys.utils.hexToUint8Array(syscallInput));
         const skey = sys.utils.uint8ArrayToHex(ret.subarray(12, 32));
 
         sys.require(skey != "", "illegal signature, verify fail");
@@ -468,11 +485,11 @@ class SessionKey {
 
     getStateKey(): string {
         return sys.utils.uint8ArrayToHex(
-            sys.crypto.keccak(sys.utils.hexToUint8Array(this.getContractAddress() + this.getEoA() + this.getSKey())));
+           sys.hostApi.crypto.keccak(sys.utils.hexToUint8Array(this.getContractAddress() + this.getEoA() + this.getSKey())));
     }
 
     static getStateKey(contract: string, eoa: string, sKey: string): string {
         return sys.utils.uint8ArrayToHex(
-            sys.crypto.keccak(sys.utils.hexToUint8Array(contract + eoa + sKey)));
+           sys.hostApi.crypto.keccak(sys.utils.hexToUint8Array(contract + eoa + sKey)));
     }
 }

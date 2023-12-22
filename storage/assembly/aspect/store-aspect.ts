@@ -1,8 +1,11 @@
 import {
     ethereum,
-    FilterTxCtx,
     IAspectBlock,
-    IAspectTransaction,
+    IPostContractCallJP,
+    IPostTxCommitJP,
+    IPostTxExecuteJP,
+    IPreContractCallJP,
+    IPreTxExecuteJP,
     OnBlockFinalizeCtx,
     OnBlockInitializeCtx,
     PostContractCallCtx,
@@ -16,14 +19,8 @@ import {
 } from "@artela/aspect-libs";
 
 
-export class StoreAspect implements IAspectTransaction, IAspectBlock {
+export class StoreAspect implements IPostTxCommitJP, IPostTxExecuteJP, IPostContractCallJP, IPreContractCallJP, IPreTxExecuteJP, IAspectBlock {
 
-    filterTx(ctx: FilterTxCtx): bool {
-
-        return true
-        // add test data
-
-    }
 
     isOwner(sender: string): bool {
         let value = sys.aspect.property.get<string>("owner")
@@ -71,10 +68,6 @@ export class StoreAspect implements IAspectTransaction, IAspectBlock {
         sys.require(ctx.env != null, "onBlockInitialize env is empty")
     }
 
-    onContractBinding(contractAddr: string): bool {
-        let value = sys.aspect.property.get<string>("binding")
-        return !!value.includes(contractAddr);
-    }
 
     postContractCall(ctx: PostContractCallCtx): void {
 

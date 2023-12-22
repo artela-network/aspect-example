@@ -12,6 +12,17 @@ const abi = fs.readFileSync('./build/contract/Counter.abi', "utf-8")
 const contractABI = JSON.parse(abi);
 const EthereumTx = require('ethereumjs-tx').Transaction;
 
+var argv = require('yargs')
+    .string('node')
+    .string('pkfile')
+    .string('args')
+    .string('contract')
+    .string('gas')
+    .string('method')
+    .string('abi')
+    .argv;
+
+
 const demoContractOptions = {
     data: contractBin
 };
@@ -35,107 +46,63 @@ function getOriginalV(hexV, chainId_) {
     return originalVHex;
 }
 async function f() {
-    console.log('start running demo');
+
     // init connection to Artela node
-    const web3 = new Web3('http://127.0.0.1:8545');
-    
-    let privKey = '0x1fa5ce7470dd46c4ccde90fb7f1a4b94f7dc22071945e547c874f366d1be300d'; // modify before running this test
-    let account = web3.eth.accounts.privateKeyToAccount(privKey);
-    web3.eth.accounts.wallet.add(account.privateKey);
-
+    const configJson = JSON.parse(fs.readFileSync('./project.config.json', "utf-8").toString());
+    // init connection to Artela node
+    let node = (argv.node)?String(argv.node):configJson.node;
+    if(!node){
+        console.log("'node' cannot be empty, please set by the parameter or artela.config.json")
+        process.exit(0)
+    }
+    const web3 = new Web3(node);
     let gasPrice = await web3.eth.getGasPrice();
-
     // get chain id
     let chainId = await web3.eth.getChainId();
 
+    //--pkfile ./build/privateKey.txt
+    let senderPriKey = String(argv.pkfile)
+    if (!senderPriKey || senderPriKey === 'undefined') {
+        senderPriKey = "privateKey.txt"
+    }
+    if (!fs.existsSync(senderPriKey)) {
+        console.log("'account' cannot be empty, please set by the parameter ' --pkfile ./build/privateKey.txt'")
+        process.exit(0)
+    }
+    let pk = fs.readFileSync(senderPriKey, 'utf-8');
+    let sender = web3.eth.accounts.privateKeyToAccount(pk.trim());
+    console.log("from address: ", sender.address);
+    web3.eth.accounts.wallet.add(sender.privateKey);
     // retrieve current nonce
-    let nonce = await web3.eth.getTransactionCount(account.address);
+    let nonce = await web3.eth.getTransactionCount(sender.address);
 
-    // instantiate an instance of the contract
+    // --contract 0x9999999999999999999999999999999999999999
+    const contractAddr = argv.contract;
+    if(!contractAddr){
+        console.log("'contract address' cannot be empty, please set by the parameter ' --contract 0x9999999999999999999999999999999999999999'")
+        process.exit(0)
+    }
+
+    // --aspectId {aspect-Id}
+    let aspectId = String(argv.aspectId)
+    if (!aspectId || aspectId === 'undefined') {
+        console.log("'aspectId' cannot be empty, please set by the parameter' --aspectId 0xxxx'")
+        process.exit(0)
+    }
+
+    // --abi xxx/xxx.abi
+    const abiPath = String(argv.abi)
+    let abi = null
+    if (abiPath && abiPath !== 'undefined') {
+        abi = JSON.parse(fs.readFileSync(abiPath, "utf-8").toString());
+    } else {
+        console.log("'abi' cannot be empty, please set by the parameter' --abi xxx/xxx.abi'")
+        process.exit(0)
+    }
+    let contract = new web3.eth.Contract(abi, contractAddr);
     let aspectCore = web3.atl.aspectCore();
-
-    // ******************************************
-    // prepare 1. deploy contract
-    // ******************************************
-
-    let contract = new web3.eth.Contract(contractABI);
-    let deployData = contract.deploy(demoContractOptions).encodeABI();
-    let tx = {
-        from: account.address,
-        nonce: nonce++,
-        gasPrice,
-        gas: 4000000,
-        data: deployData,
-        chainId
-    }
-
-    let signedTx = await web3.eth.accounts.signTransaction(tx, account.privateKey);
-    console.log("signed contract deploy tx : \n", signedTx);
-
-    let receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    contract.options.address = receipt.contractAddress;
-    console.log('contract address is: ', contract.options.address);
-
-    // ******************************************
-    // prepare 2. deploy aspect
-    // ******************************************
-
-    // load aspect code and deploy
-    let aspectCode = fs.readFileSync('./build/release.wasm', {
-        encoding: "hex"
-    });
-
-    // instantiate an instance of aspect
     let aspect = new web3.atl.Aspect();
-    let aspectDeployData = aspect.deploy({
-        data: '0x' + aspectCode,
-        properties: [],
-        paymaster: account.address,
-        proof: '0x0'
-    }).encodeABI();
 
-    tx = {
-        from: account.address,
-        nonce: nonce++,
-        gasPrice,
-        gas: 4000000,
-        to: aspectCore.options.address,
-        data: aspectDeployData,
-        chainId
-    }
-
-    console.log('signed Aspect deploy Tx');
-    signedTx = await web3.eth.accounts.signTransaction(tx, account.privateKey);
-    console.log('send Aspect deploy Tx');
-    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    aspect.options.address = receipt.aspectAddress;
-    console.log('aspect address is: ', aspect.options.address);
-
-    // ******************************************
-    // prepare 3. binding contract to aspect
-    // ******************************************
-
-    // binding with smart contract
-    let contractBindingData = await contract.bind({
-        priority: 1,
-        aspectId: aspect.options.address,
-        aspectVersion: 1,
-    }).encodeABI();
-
-    tx = {
-        from: account.address,
-        nonce: nonce++,
-        gasPrice,
-        gas: 4000000,
-        data: contractBindingData,
-        to: aspectCore.options.address,
-        chainId
-    }
-
-    signedTx = await web3.eth.accounts.signTransaction(tx, account.privateKey);
-    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    console.log(`binding contract result:`);
-    console.log(receipt);
 
     // ******************************************
     // start testing session keys
@@ -146,10 +113,10 @@ async function f() {
     // ******************************************
 
     // binding with EoA
-    let eoaBindingData = await aspectCore.methods.bind(aspect.options.address, 1, account.address, 1).encodeABI();
+    let eoaBindingData = await aspectCore.methods.bind(aspectId, 1, sender.address, 1).encodeABI();
 
-    tx = {
-        from: account.address,
+    let tx = {
+        from: sender.address,
         nonce: nonce++,
         gasPrice,
         gas: 4000000,
@@ -158,8 +125,8 @@ async function f() {
         chainId
     }
 
-    signedTx = await web3.eth.accounts.signTransaction(tx, account.privateKey);
-    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    let  signedTx = await web3.eth.accounts.signTransaction(tx, sender.privateKey);
+    let  receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
     console.log(`binding EoA result:`);
     console.log(receipt);
 
@@ -173,9 +140,9 @@ async function f() {
     let sKeyPrivKey2 = web3.eth.accounts.create(web3.utils.randomHex(32)).privateKey;
     let sKeyAccount2 = web3.eth.accounts.privateKeyToAccount(sKeyPrivKey2);
 
-    let mainKey = rmPrefix(account.address);
+    let mainKey = rmPrefix(sender.address);
     let sKey = rmPrefix(sKeyAccount.address);
-    let sKeyContract = rmPrefix(contract.options.address);
+    let sKeyContract = rmPrefix(contractAddr);
 
     let contractCallData = contract.methods.add([1]).encodeABI();
     let contractCallMethod = rmPrefix(contractCallData).substring(0, 8);
@@ -192,7 +159,7 @@ async function f() {
     console.log("calldata: ", sessionKeyRegData);
 
     tx = {
-        from: account.address,
+        from: sender.address,
         nonce: nonce++,
         gasPrice,
         gas: 8000000,
@@ -290,9 +257,7 @@ async function f() {
     console.log("contractCallData : ", contractCallData);
     let encodedData = web3.eth.abi.encodeParameters(['bytes', 'bytes'],
         ["0x" + validationData, contractCallData]);
-    let keccak2 = web3.utils.keccak256(encodedData);
-    let perfix2 = keccak2.substring(2,10);
-    encodedData="0xcafecafe"+perfix2+encodedData.substring(2);
+
     tx = {
         from: sKeyAccount.address,
         nonce: numberToHex(nonce - 1),
@@ -338,9 +303,6 @@ async function f() {
     encodedData = web3.eth.abi.encodeParameters(['bytes', 'bytes'],
         ["0x" + validationData, contractCallData]);
 
-    let keccak = web3.utils.keccak256(encodedData);
-    let perfix = keccak.substring(2,10);
-    encodedData="0xcafecafe"+perfix+encodedData.substring(2);
     tx = {
         from: sKeyAccount.address,
         nonce: numberToHex(nonce - 1),
