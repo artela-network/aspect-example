@@ -42,6 +42,17 @@ there will be three private Key when completed
 
 To acquire Test Tokens for your testing needs : https://docs.artela.network/develop/resources/faucet
 
+### build code
+```shell
+npm run contract:build
+
+## rm -rf ./build/contract/Attack_storage.json
+## npm run aspect:gen
+
+npm run aspect:build
+
+```
+
 ### execute test case
 
 ```shell
