@@ -16,6 +16,11 @@
       "noAssert": false
     }
   },
+  "entries": [
+    "./aspect/guard-by-lock.ts",
+    "./aspect/guard-by-count.ts",
+    "./aspect/guard-by-trace.ts"
+  ],
   "options": {
     "bindings": "esm"
   }
