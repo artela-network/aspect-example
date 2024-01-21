@@ -13,16 +13,16 @@ async function f() {
     const web3 = new Web3('http://127.0.0.1:8545');
 
     // retrieve accounts
-    let accounts = await web3.atl.getAccounts();
+    let accounts = await web3.eth.getAccounts();
 
     // retrieve current nonce
-    let nonce = await web3.atl.getTransactionCount(accounts[0]);
-    let gasPrice = await web3.atl.getGasPrice();
+    let nonce = await web3.eth.getTransactionCount(accounts[0]);
+    let gasPrice = await web3.eth.getGasPrice();
 
     let entrypointContractAddress = '0x000000000000000000000000000000000000AAEC';
 
     // 2. deploy aa wallet factory
-    let aaWalletFactoryContract = await new web3.atl.Contract(aaWalletFactory.abi);
+    let aaWalletFactoryContract = await new web3.eth.Contract(aaWalletFactory.abi);
     let deployOption = {
         data: aaWalletFactory.bytecode,
         arguments: [entrypointContractAddress] // entrypoint contact address
@@ -61,7 +61,7 @@ async function f() {
     console.log('wallet address: ', walletAddr);
 
     // 4. deploy a business logic contract
-    let storageContract = new web3.atl.Contract(storage.abi);
+    let storageContract = new web3.eth.Contract(storage.abi);
     deployOption = {
         data: storage.bin,
     };
@@ -79,7 +79,7 @@ async function f() {
             console.log('storage deploy error: ', error);
         });
 
-    let storageContract2 = new web3.atl.Contract(storage.abi);
+    let storageContract2 = new web3.eth.Contract(storage.abi);
     deployOption = {
         data: storage.bin,
     };
@@ -120,7 +120,7 @@ async function f() {
     console.log('deployed aspect id: ', aspectId);
 
     // 6. approve aspect
-    let aaWalletContract = new web3.atl.Contract(aaWallet.abi, walletAddr);
+    let aaWalletContract = new web3.eth.Contract(aaWallet.abi, walletAddr);
 
     // check owner
     let owner = await aaWalletContract.methods.owner().call();

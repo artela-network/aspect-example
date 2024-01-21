@@ -1,83 +1,34 @@
 import {
     ethereum,
-    FilterTxCtx,
-    IAspectBlock,
-    IAspectTransaction,
-    JitInherentRequest,
-    OnBlockFinalizeCtx,
-    OnBlockInitializeCtx,
-    PostContractCallCtx,
-    PostTxCommitCtx,
-    PostTxExecuteCtx,
-    PreContractCallCtx,
-    PreTxExecuteCtx,
-    sys,
+    hexToUint8Array,
+    IPostContractCallJP, JitCallBuilder,
+    PostContractCallInput,
+    sys, uint8ArrayToHex,
 } from "@artela/aspect-libs";
 
-export class StorageMirror implements IAspectTransaction, IAspectBlock {
-    filterTx(ctx: FilterTxCtx): bool {
-        return true;
+export class StorageMirror implements IPostContractCallJP {
+
+    isOwner(sender: Uint8Array): bool {
+        return true
     }
 
-    isOwner(sender: string): bool {
-        let value = sys.aspect.property.get<string>("owner");
-        return value.includes(sender);
-    }
 
-    onBlockInitialize(ctx: OnBlockInitializeCtx): void {
-        return
-    }
+    postContractCall(ctx: PostContractCallInput): void {
 
-    onBlockFinalize(ctx: OnBlockFinalizeCtx): void {
-        return
-    }
-
-    onContractBinding(contractAddr: string): bool {
-        return true;
-    }
-
-    preTxExecute(ctx: PreTxExecuteCtx): void {
-    }
-
-    preContractCall(ctx: PreContractCallCtx): void {
-
-    }
-
-    postContractCall(ctx: PostContractCallCtx): void {
-        let txData = sys.utils.uint8ArrayToHex(ctx.tx.content.unwrap().input);
+        let txData = uint8ArrayToHex(ctx.call!.data);
 
         // calling store method
         if (txData.startsWith('6057361d')) {
             // then we try to mirror the call to another storage contract
             let walletAddress = sys.aspect.property.get<string>("wallet");
-
             let contractAddress = sys.aspect.property.get<string>("contract");
 
-            const callData = ethereum.abiEncode('execute', [
-                ethereum.Address.fromHexString(contractAddress),
-                ethereum.Number.fromU64(0),
-                ethereum.Bytes.fromHexString(txData),
-            ]);
 
-            let request = new JitInherentRequest(
-                sys.utils.hexToUint8Array(walletAddress),
-                new Uint8Array(0),
-                new Uint8Array(0),
-                sys.utils.hexToUint8Array(callData),
-                sys.utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
-                sys.utils.hexToUint8Array(ethereum.Number.fromU64(1000000).encodeHex()),
-                new Uint8Array(0),
-                new Uint8Array(0),
-                new Uint8Array(0),
-            );
-            let response = sys.evm.jitCall(ctx).submit(request);
+            const request = JitCallBuilder.simple(hexToUint8Array(walletAddress), ethereum.Address.fromHexString(contractAddress), ethereum.Bytes.fromHexString(txData)).build();
+
+            const response = sys.hostApi.evmCall.jitCall(request);
+
             sys.require(response.success, 'failed to call JIT');
         }
-    }
-
-    postTxExecute(ctx: PostTxExecuteCtx): void {
-    }
-
-    postTxCommit(ctx: PostTxCommitCtx): void {
     }
 }
