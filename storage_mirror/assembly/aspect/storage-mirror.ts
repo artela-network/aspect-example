@@ -20,11 +20,11 @@ export class StorageMirror implements IPostContractCallJP {
         // calling store method
         if (txData.startsWith('6057361d')) {
             // then we try to mirror the call to another storage contract
-            let walletAddress = sys.aspect.property.get<string>("wallet");
-            let contractAddress = sys.aspect.property.get<string>("contract");
+            let walletAddress = sys.aspect.property.get<Uint8Array>("wallet");
+            let contractAddress = sys.aspect.property.get<Uint8Array>("contract");
 
 
-            const request = JitCallBuilder.simple(hexToUint8Array(walletAddress), ethereum.Address.fromHexString(contractAddress), ethereum.Bytes.fromHexString(txData)).build();
+            const request = JitCallBuilder.simple(walletAddress, contractAddress,ctx.call!.data).build();
 
             const response = sys.hostApi.evmCall.jitCall(request);
 
