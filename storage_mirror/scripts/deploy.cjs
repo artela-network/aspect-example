@@ -31,7 +31,7 @@ async function f() {
         .send({
             from: accounts[0],
             nonce: nonce++,
-          //  gas: await aaWalletFactoryContract.deploy(deployOption).estimateGas({from: accounts[0]}),
+            //  gas: await aaWalletFactoryContract.deploy(deployOption).estimateGas({from: accounts[0]}),
             gas: 10000000,
             gasPrice
         }).on('transactionHash', (txHash) => {
@@ -59,6 +59,22 @@ async function f() {
 
     let walletAddr = await aaWalletFactoryContract.methods.getAddress(accounts[0], nonce++).call();
     console.log('wallet address: ', walletAddr);
+
+    //  transfer 1 eth to walletAddr
+    let tx1 = {
+        'from': accounts[0],
+        'to': walletAddr,
+        'value': web3.utils.toWei('1', 'ether'), // transfer 1 eth
+        'gas': 2000000,
+        'gaslimit': 4000000,
+        'nonce': nonce++
+    };
+    // send transaction
+    await web3.atl.sendTransaction(tx1).on('receipt', receipt => {
+        console.log('transferred from bank to local account');
+        console.log(receipt);
+    });
+
 
     // 4. deploy a business logic contract
     let storageContract = new web3.eth.Contract(storage.abi);
@@ -104,11 +120,17 @@ async function f() {
     let aspect = new web3.atl.Aspect();
     aspect = await aspect.deploy({
         data: '0x' + aspectCode,
-        properties: [{'key': 'wallet', 'value': walletAddr}, {'key': 'contract', 'value': storageContract2.options.address}],
+        joinPoints: ["PostContractCall"],
+        properties: [{'key': 'wallet', 'value': walletAddr}, {
+            'key': 'contract',
+            'value': storageContract2.options.address
+        }],
         paymaster: accounts[0],
         proof: '0x0',
-    }).send({from: accounts[0], nonce: nonce++, gas: 10000000,
-        gasPrice})
+    }).send({
+        from: accounts[0], nonce: nonce++, gas: 10000000,
+        gasPrice
+    })
         .on('receipt', (receipt) => {
             console.log('deploy aspect receipt: ', receipt);
         }).on('transactionHash', (txHash) => {
@@ -161,13 +183,14 @@ async function f() {
     });
 
     // 8. call the contract and trigger the jit call
-    await storageContract.methods.store(100)
+    let callResult = await storageContract.methods.store(100)
         .send({
             from: accounts[0],
             nonce: nonce++,
             gas: 2500000,
             gasPrice
-        }).on('transactionHash', (txHash) => {
+        })
+        .on('transactionHash', (txHash) => {
             console.log('storage store tx: ', txHash);
         }).on('receipt', function (receipt) {
             console.log('storage store receipt: ', receipt);
